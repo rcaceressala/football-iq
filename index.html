@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football IQ — Coach cognitivo élite</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800;900&family=Barlow:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --g:#1D9E75;--gd:#0F6E56;--gl:#9FE1CB;--gg:#1D9E7510;
+  --bg:#080c0b;--bg2:#0d1210;--bg3:#111614;
+  --b:#1a2622;--t:#e2e8e5;--t2:#7a9990;--t3:#3d5550;
+  --am:#EF9F27;--co:#D85A30;--pu:#7F77DD;
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--t);overflow-x:hidden;}
+
+/* NOISE TEXTURE */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 40px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--b);background:rgba(8,12,11,.85);backdrop-filter:blur(12px);}
+.nav-logo{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--g);letter-spacing:2px;}
+.nav-logo span{color:var(--t2);font-weight:400;}
+.nav-links{display:flex;gap:28px;align-items:center;}
+.nav-links a{font-size:13px;color:var(--t2);text-decoration:none;font-family:'DM Mono',monospace;transition:color .2s;}
+.nav-links a:hover{color:var(--g);}
+.nav-cta{background:var(--g);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;letter-spacing:.5px;padding:8px 20px;border-radius:6px;text-decoration:none;transition:background .2s;}
+.nav-cta:hover{background:var(--gd);}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 40px 80px;text-align:center;position:relative;overflow:hidden;}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(var(--b) 1px,transparent 1px),linear-gradient(90deg,var(--b) 1px,transparent 1px);background-size:60px 60px;opacity:.3;}
+.hero-glow{position:absolute;top:20%;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(ellipse,#1D9E7515 0%,transparent 70%);pointer-events:none;}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:var(--gg);border:0.5px solid var(--gd);color:var(--gl);font-size:11px;padding:5px 14px;border-radius:20px;font-family:'DM Mono',monospace;letter-spacing:.5px;margin-bottom:28px;position:relative;z-index:1;
+  animation:fadeUp .6s ease both;}
+.hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--g);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-family:'Barlow Condensed',sans-serif;font-size:clamp(52px,9vw,96px);font-weight:900;line-height:.95;letter-spacing:-1px;position:relative;z-index:1;
+  animation:fadeUp .7s .1s ease both;}
+h1 .green{color:var(--g);}
+h1 .dim{color:var(--t2);font-weight:400;}
+.hero-sub{font-size:clamp(15px,2vw,18px);color:var(--t2);line-height:1.7;max-width:520px;margin:24px auto 0;position:relative;z-index:1;font-weight:300;
+  animation:fadeUp .7s .2s ease both;}
+.hero-sub strong{color:var(--t);font-weight:500;}
+.hero-btns{display:flex;gap:12px;justify-content:center;margin-top:36px;position:relative;z-index:1;flex-wrap:wrap;
+  animation:fadeUp .7s .3s ease both;}
+.btn-primary{background:var(--g);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;padding:13px 28px;border-radius:8px;text-decoration:none;transition:all .2s;border:none;cursor:pointer;}
+.btn-primary:hover{background:var(--gd);transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:var(--t2);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;letter-spacing:.5px;padding:13px 28px;border-radius:8px;text-decoration:none;border:0.5px solid var(--b);transition:all .2s;}
+.btn-ghost:hover{border-color:var(--gd);color:var(--gl);}
+.hero-stat-row{display:flex;gap:40px;justify-content:center;margin-top:56px;position:relative;z-index:1;
+  animation:fadeUp .7s .4s ease both;}
+.hero-stat{text-align:center;}
+.hero-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:800;color:var(--g);line-height:1;}
+.hero-stat-label{font-size:11px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:4px;text-transform:uppercase;letter-spacing:.5px;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* PROBLEMA */
+.section{padding:100px 40px;max-width:1100px;margin:0 auto;}
+.section-tag{font-family:'DM Mono',monospace;font-size:11px;color:var(--g);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;}
+.section-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(36px,5vw,56px);font-weight:800;line-height:1.05;letter-spacing:-.5px;}
+.section-title .dim{color:var(--t2);}
+
+.problem-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:40px;}
+.problem-card{background:var(--bg2);border:0.5px solid var(--b);border-radius:12px;padding:24px;position:relative;overflow:hidden;}
+.problem-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--co);}
+.problem-label{font-size:11px;color:var(--co);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.problem-text{font-size:15px;color:var(--t);line-height:1.6;font-weight:300;}
+.problem-text strong{color:var(--co);font-weight:500;}
+
+/* DIFERENCIADOR */
+.diff-wrap{background:var(--bg2);border-top:0.5px solid var(--b);border-bottom:0.5px solid var(--b);padding:100px 40px;}
+.diff-inner{max-width:1100px;margin:0 auto;}
+.diff-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px;}
+.diff-card{padding:28px;border-radius:12px;border:0.5px solid var(--b);background:var(--bg3);position:relative;overflow:hidden;transition:border-color .2s;}
+.diff-card:hover{border-color:var(--gd);}
+.diff-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--g);transform:scaleX(0);transition:transform .3s;transform-origin:left;}
+.diff-card:hover::after{transform:scaleX(1);}
+.diff-num{font-family:'Barlow Condensed',sans-serif;font-size:48px;font-weight:900;color:var(--b);line-height:1;margin-bottom:12px;}
+.diff-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--gl);margin-bottom:8px;letter-spacing:.3px;}
+.diff-text{font-size:13px;color:var(--t2);line-height:1.7;font-weight:300;}
+
+/* CÓMO FUNCIONA */
+.how-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-top:56px;}
+.how-steps{display:flex;flex-direction:column;gap:0;}
+.how-step{display:flex;gap:20px;padding:24px 0;border-bottom:0.5px solid var(--b);position:relative;}
+.how-step:last-child{border-bottom:none;}
+.how-step-num{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--g);font-family:'DM Mono',monospace;min-width:28px;margin-top:2px;}
+.how-step-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px;letter-spacing:.3px;}
+.how-step-text{font-size:13px;color:var(--t2);line-height:1.6;font-weight:300;}
+.how-visual{background:var(--bg2);border:0.5px solid var(--b);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:12px;}
+.chat-msg{padding:10px 14px;border-radius:10px;font-size:12px;line-height:1.6;max-width:88%;}
+.chat-msg.user{background:#0F6E56;color:#d4f0e6;border-radius:10px 2px 10px 10px;align-self:flex-end;margin-left:auto;}
+.chat-msg.ai{background:var(--bg3);border:0.5px solid var(--b);border-radius:2px 10px 10px 10px;color:var(--t);}
+.chat-block{background:#0d1a16;border-left:2px solid var(--g);border-radius:0 6px 6px 0;padding:7px 10px;margin-top:4px;font-size:11px;color:var(--t2);line-height:1.5;}
+.chat-block-label{font-size:9px;font-family:'DM Mono',monospace;color:var(--g);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.chat-block.er{border-color:var(--co);}
+.chat-block.er .chat-block-label{color:var(--co);}
+
+/* POSICIONES */
+.pos-wrap{background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);border-top:0.5px solid var(--b);}
+.pos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:48px;}
+.pos-card{background:var(--bg3);border:0.5px solid var(--b);border-radius:12px;padding:20px;transition:all .2s;cursor:default;}
+.pos-card:hover{border-color:var(--gd);transform:translateY(-2px);}
+.pos-number{font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:var(--g);line-height:1;margin-bottom:6px;}
+.pos-name{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px;letter-spacing:.3px;}
+.pos-desc{font-size:12px;color:var(--t2);line-height:1.5;font-weight:300;}
+
+/* COMPARATIVA */
+.compare-table{width:100%;border-collapse:collapse;margin-top:48px;}
+.compare-table th{font-family:'DM Mono',monospace;font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;padding:12px 16px;text-align:left;border-bottom:0.5px solid var(--b);}
+.compare-table th.hl{color:var(--g);}
+.compare-table td{padding:14px 16px;border-bottom:0.5px solid var(--b);font-size:13px;color:var(--t2);vertical-align:middle;}
+.compare-table td.hl{color:var(--gl);font-weight:500;}
+.compare-table tr:last-child td{border-bottom:none;}
+.check{color:var(--g);font-size:16px;}
+.cross{color:var(--t3);font-size:16px;}
+.compare-table tr:hover td{background:var(--bg2);}
+
+/* CTA FINAL */
+.cta-section{padding:120px 40px;text-align:center;position:relative;overflow:hidden;}
+.cta-section::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:800px;height:400px;background:radial-gradient(ellipse,#1D9E7512 0%,transparent 70%);pointer-events:none;}
+.cta-title{font-family:'Barlow Condensed',sans-serif;font-size:clamp(42px,7vw,80px);font-weight:900;line-height:.95;letter-spacing:-1px;position:relative;z-index:1;}
+.cta-sub{font-size:16px;color:var(--t2);margin:20px auto 0;max-width:440px;line-height:1.7;font-weight:300;position:relative;z-index:1;}
+.cta-btns{display:flex;gap:12px;justify-content:center;margin-top:36px;position:relative;z-index:1;flex-wrap:wrap;}
+.adn-bar{border-top:0.5px solid var(--b);padding:20px 40px;text-align:center;}
+.adn-bar p{font-family:'Barlow Condensed',sans-serif;font-size:15px;color:var(--t3);font-style:italic;}
+.adn-bar span{color:var(--g);}
+
+/* FOOTER */
+footer{border-top:0.5px solid var(--b);padding:32px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.footer-logo{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--g);letter-spacing:1.5px;}
+.footer-logo span{color:var(--t3);font-weight:400;}
+.footer-copy{font-size:12px;color:var(--t3);font-family:'DM Mono',monospace;}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  nav{padding:14px 20px;}
+  .nav-links{display:none;}
+  .hero{padding:100px 20px 60px;}
+  .hero-stat-row{gap:24px;}
+  .section{padding:64px 20px;}
+  .problem-grid,.diff-grid,.pos-grid{grid-template-columns:1fr;}
+  .how-grid{grid-template-columns:1fr;}
+  .how-visual{display:none;}
+  .diff-wrap{padding:64px 20px;}
+  .cta-section{padding:80px 20px;}
+  .adn-bar,.footer{padding:20px;}
+  footer{flex-direction:column;align-items:flex-start;}
+  .compare-table{font-size:12px;}
+  .compare-table td,.compare-table th{padding:10px 10px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">FOOTBALL <span>IQ</span></div>
+  <div class="nav-links">
+    <a href="#como">Cómo funciona</a>
+    <a href="#posiciones">Posiciones</a>
+    <a href="#diferencia">Diferencia</a>
+  </div>
+  <a href="#cta" class="nav-cta">Empezar gratis</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-tag">Coach cognitivo élite · IA</div>
+  <h1>
+    Piensa el fútbol<br>
+    <span class="green">dos segundos</span><br>
+    <span class="dim">antes que todos</span>
+  </h1>
+  <p class="hero-sub">
+    El primer coach de <strong>inteligencia táctica</strong> diseñado para el jugador — no para el entrenador. Analiza cómo lees el juego, detecta errores invisibles y desarrolla tu mente futbolística.
+  </p>
+  <div class="hero-btns">
+    <a href="#cta" class="btn-primary">Empezar gratis →</a>
+    <a href="#como" class="btn-ghost">Ver cómo funciona</a>
+  </div>
+  <div class="hero-stat-row">
+    <div class="hero-stat">
+      <div class="hero-stat-val">6</div>
+      <div class="hero-stat-label">Posiciones</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val">5</div>
+      <div class="hero-stat-label">Sistemas tácticos</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val">7</div>
+      <div class="hero-stat-label">Bloques de análisis</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-val">∞</div>
+      <div class="hero-stat-label">Sesiones de coach</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEMA -->
+<section class="section">
+  <div class="section-tag">El problema real</div>
+  <div class="section-title">
+    Hay miles de apps de fútbol.<br>
+    <span class="dim">Ninguna te habla a ti.</span>
+  </div>
+  <div class="problem-grid">
+    <div class="problem-card">
+      <div class="problem-label">Apps de estadísticas</div>
+      <div class="problem-text">Te dicen qué pasó en el partido de <strong>Haaland</strong>. No qué pasó en el tuyo.</div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-label">Videos de YouTube</div>
+      <div class="problem-text">Explican cómo juega el <strong>Barcelona</strong>. No cómo deberías jugar tú de mediocentro en fútbol 6.</div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-label">LongMatch y similares</div>
+      <div class="problem-text">Herramientas para <strong>entrenadores con analistas</strong>. No para el jugador que quiere mejorar solo.</div>
+    </div>
+    <div class="problem-card">
+      <div class="problem-label">Coach privado real</div>
+      <div class="problem-text">$50–200 por sesión. <strong>Inaccesible</strong> para el 99% de jugadores amateurs del mundo.</div>
+    </div>
+  </div>
+</section>
+
+<!-- DIFERENCIADORES -->
+<div class="diff-wrap" id="diferencia">
+  <div class="diff-inner">
+    <div class="section-tag">Lo que nos hace distintos</div>
+    <div class="section-title">Tres cosas que<br><span class="dim">nadie más hace.</span></div>
+    <div class="diff-grid">
+      <div class="diff-card">
+        <div class="diff-num">01</div>
+        <div class="diff-title">Habla de ti, no del fútbol</div>
+        <div class="diff-text">No es "así se juega de mediocentro". Es "esto hiciste tú en esa jugada y esto es lo que debiste hacer". Personalización total — tu posición, tu formato, tu error específico.</div>
+      </div>
+      <div class="diff-card">
+        <div class="diff-num">02</div>
+        <div class="diff-title">Entrena la mente, no el cuerpo</div>
+        <div class="diff-text">El 99% de apps entrenan ejecución física. Football IQ entrena percepción, escaneo, timing, lectura espacial y control emocional. Lo que separa a un jugador bueno de uno inteligente.</div>
+      </div>
+      <div class="diff-card">
+        <div class="diff-num">03</div>
+        <div class="diff-title">Accesible para cualquier jugador</div>
+        <div class="diff-text">Wyscout cuesta miles al año. Un coach élite cuesta $200 por sesión. Football IQ da el mismo nivel de análisis cognitivo disponible en tu celular, ahora mismo, gratis.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CÓMO FUNCIONA -->
+<section class="section" id="como">
+  <div class="section-tag">Cómo funciona</div>
+  <div class="section-title">Describe. El coach<br><span class="dim">analiza y corrige.</span></div>
+  <div class="how-grid">
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-step-num">01</div>
+        <div>
+          <div class="how-step-title">Configura tu perfil</div>
+          <div class="how-step-text">Elige tu posición, formato de juego y nivel. El coach calibra cada análisis a tu contexto exacto.</div>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">02</div>
+        <div>
+          <div class="how-step-title">Describe una jugada</div>
+          <div class="how-step-text">Cuéntale al coach qué pasó — una situación, una decisión, un error que repetiste. Con texto, en tu idioma.</div>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">03</div>
+        <div>
+          <div class="how-step-title">Recibe análisis élite</div>
+          <div class="how-step-text">El coach disecciona tu error invisible, te da la corrección y te entrega un ejercicio práctico para entrenar esa situación.</div>
+        </div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-num">04</div>
+        <div>
+          <div class="how-step-title">Evoluciona sesión a sesión</div>
+          <div class="how-step-text">La app recuerda tus errores recurrentes y construye tu inteligencia táctica de forma progresiva.</div>
+        </div>
+      </div>
+    </div>
+    <div class="how-visual">
+      <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Sesión real · Mediocentro · F6</div>
+      <div class="chat-msg user">Salí a presionar y me superaron por el interior. Quedó un pasillo enorme.</div>
+      <div class="chat-msg ai">
+        <div style="font-size:9px;font-family:'DM Mono',monospace;color:var(--g);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Coach · Análisis de jugada</div>
+        <div class="chat-block">
+          <div class="chat-block-label">Mentalidad élite</div>
+          No salgas a marcar al hombre. Posiciónate en la línea de pase más peligrosa.
+        </div>
+        <div class="chat-block er" style="margin-top:5px;">
+          <div class="chat-block-label">Error invisible</div>
+          Comprometiste tu cuerpo antes de que el rival mostrara su intención. Eso abrió el pasillo.
+        </div>
+        <div class="chat-block" style="margin-top:5px;border-color:var(--am);">
+          <div class="chat-block-label" style="color:var(--am);">Corrección élite</div>
+          Si el pase ocurre, ya estás ahí. Si no ocurre, seguiste sin comprometerte.
+        </div>
+        <div class="chat-block" style="margin-top:5px;background:#0a1a14;border-color:var(--gd);">
+          <div class="chat-block-label">ADN futbolístico</div>
+          <span style="color:var(--gl);font-style:italic;">"El 6 no corre detrás del caos. Lo organiza."</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- POSICIONES -->
+<div class="pos-wrap" id="posiciones">
+  <div class="section">
+    <div class="section-tag">Para tu posición</div>
+    <div class="section-title">Un coach que entiende<br><span class="dim">tu rol específico.</span></div>
+    <div class="pos-grid">
+      <div class="pos-card">
+        <div class="pos-number">6</div>
+        <div class="pos-name">Mediocentro</div>
+        <div class="pos-desc">Escaneo, cobertura de zona, timing de salida, control del ritmo</div>
+      </div>
+      <div class="pos-card">
+        <div class="pos-number">DFC</div>
+        <div class="pos-name">Central</div>
+        <div class="pos-desc">Control de profundidad, coberturas, gestión de la línea</div>
+      </div>
+      <div class="pos-card">
+        <div class="pos-number">LAT</div>
+        <div class="pos-name">Lateral</div>
+        <div class="pos-desc">Timing ofensivo, cierre interior, sincronización con extremo</div>
+      </div>
+      <div class="pos-card">
+        <div class="pos-number">8</div>
+        <div class="pos-name">Interior</div>
+        <div class="pos-desc">Ocupación entre líneas, tercer hombre, rupturas al espacio</div>
+      </div>
+      <div class="pos-card">
+        <div class="pos-number">11</div>
+        <div class="pos-name">Extremo</div>
+        <div class="pos-desc">Fijación, 1v1, timing del desmarque, ataque interior</div>
+      </div>
+      <div class="pos-card">
+        <div class="pos-number">9</div>
+        <div class="pos-name">Delantero</div>
+        <div class="pos-desc">Fijación de centrales, apoyos, timing de ruptura</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARATIVA -->
+<section class="section">
+  <div class="section-tag">Comparativa</div>
+  <div class="section-title">Football IQ vs<br><span class="dim">todo lo demás.</span></div>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Funcionalidad</th>
+        <th class="hl">Football IQ</th>
+        <th>LongMatch</th>
+        <th>YouTube táctico</th>
+        <th>Coach privado</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Análisis personalizado de TU jugada</td>
+        <td class="hl"><span class="check">✓</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="check">✓</span></td>
+      </tr>
+      <tr>
+        <td>Sin video requerido</td>
+        <td class="hl"><span class="check">✓</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span class="check">✓</span></td>
+      </tr>
+      <tr>
+        <td>Disponible 24/7 en tu celular</td>
+        <td class="hl"><span class="check">✓</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span class="cross">—</span></td>
+      </tr>
+      <tr>
+        <td>Inteligencia cognitiva y táctica real</td>
+        <td class="hl"><span class="check">✓</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="check">✓</span></td>
+      </tr>
+      <tr>
+        <td>Esquemas visuales por posición</td>
+        <td class="hl"><span class="check">✓</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+      </tr>
+      <tr>
+        <td>Plan de preparación física</td>
+        <td class="hl"><span class="check">✓</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+        <td><span class="cross">—</span></td>
+      </tr>
+      <tr>
+        <td>Accesible para cualquier jugador</td>
+        <td class="hl"><span class="check">✓ Gratis</span></td>
+        <td><span style="color:var(--am)">Pago</span></td>
+        <td><span class="check">✓</span></td>
+        <td><span style="color:var(--co)">$50–200/sesión</span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="cta">
+  <div class="section-tag">Empieza hoy</div>
+  <div class="cta-title">Tu coach<br><span style="color:var(--g)">te espera.</span></div>
+  <p class="cta-sub">Sin tarjeta de crédito. Sin instalación. Solo describe tu primera jugada y el coach analiza en segundos.</p>
+  <div class="cta-btns">
+    <a href="#" class="btn-primary" style="font-size:16px;padding:14px 32px;">Empezar gratis →</a>
+    <a href="#como" class="btn-ghost" style="font-size:16px;padding:14px 32px;">Ver demo</a>
+  </div>
+</section>
+
+<div class="adn-bar">
+  <p><span>"El fútbol pertenece al jugador que entiende el espacio, el tiempo y el caos antes que aparezcan."</span></p>
+</div>
+
+<footer>
+  <div class="footer-logo">FOOTBALL <span>IQ</span></div>
+  <div class="footer-copy">© 2026 Football IQ · Coach cognitivo élite · Construido con IA</div>
+</footer>
+
+</body>
+</html>
