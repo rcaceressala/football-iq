@@ -1,363 +1,409 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Football IQ — Coach cognitivo élite</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #0a0a0a;
-      color: #f0f0f0;
-      min-height: 100vh;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football IQ — Coach élite</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Barlow:wght@400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --g:#1D9E75;--gd:#0F6E56;--gg:#1D9E7518;--gl:#9FE1CB;
+  --bg:#0c0f0e;--bg2:#111614;--bg3:#161c1a;--bg4:#1a2220;
+  --b:#1e2b27;--b2:#243330;
+  --t:#e2e8e5;--t2:#8fa89f;--t3:#4d6660;
+  --am:#EF9F27;--co:#D85A30;--pu:#7F77DD;--bl:#378ADD;
+}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;display:flex;flex-direction:column;align-items:center;}
+.app{max-width:680px;width:100%;flex:1;display:flex;flex-direction:column;border-left:0.5px solid var(--b);border-right:0.5px solid var(--b);}
 
-    /* ── LOGIN SCREEN ── */
-    #login-screen {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-    }
-    .login-card {
-      background: #111;
-      border: 1px solid #222;
-      border-radius: 16px;
-      padding: 48px 40px;
-      width: 100%;
-      max-width: 400px;
-      text-align: center;
-      box-shadow: 0 0 60px rgba(0,200,100,0.08);
-    }
-    .login-logo {
-      font-size: 2.5rem;
-      margin-bottom: 8px;
-    }
-    .login-title {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #00c864;
-      margin-bottom: 4px;
-    }
-    .login-subtitle {
-      font-size: 0.9rem;
-      color: #666;
-      margin-bottom: 32px;
-    }
-    .login-card label {
-      display: block;
-      text-align: left;
-      font-size: 0.8rem;
-      color: #888;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-    .login-card input {
-      width: 100%;
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 12px 16px;
-      color: #f0f0f0;
-      font-size: 1rem;
-      margin-bottom: 20px;
-      outline: none;
-      transition: border 0.2s;
-    }
-    .login-card input:focus { border-color: #00c864; }
-    .login-btn {
-      width: 100%;
-      background: #00c864;
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      padding: 14px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
-      margin-top: 4px;
-    }
-    .login-btn:hover { background: #00e070; transform: translateY(-1px); }
-    .login-btn:active { transform: translateY(0); }
-    .login-btn:disabled { background: #444; color: #888; cursor: not-allowed; transform: none; }
-    .login-error {
-      background: rgba(255,60,60,0.12);
-      border: 1px solid rgba(255,60,60,0.3);
-      color: #ff6060;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 0.85rem;
-      margin-top: 16px;
-      display: none;
-    }
+/* API KEY MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--bg2);border:0.5px solid var(--b);border-radius:14px;padding:24px;max-width:360px;width:100%;display:flex;flex-direction:column;gap:14px;}
+.modal-logo{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--g);letter-spacing:1px;}
+.modal-logo span{color:var(--t2);font-weight:400;}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;}
+.modal-sub{font-size:12px;color:var(--t2);line-height:1.6;}
+.modal-inp{background:var(--bg3);border:0.5px solid var(--b2);border-radius:8px;padding:10px 12px;color:var(--t);font-size:12px;font-family:'DM Mono',monospace;width:100%;outline:none;transition:border-color .15s;}
+.modal-inp:focus{border-color:var(--g);}
+.modal-inp::placeholder{color:var(--t3);}
+.modal-btn{background:var(--g);border:none;border-radius:8px;padding:11px;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;letter-spacing:.5px;cursor:pointer;transition:background .15s;}
+.modal-btn:hover{background:var(--gd);}
+.modal-note{font-size:10px;color:var(--t3);line-height:1.5;font-family:'DM Mono',monospace;}
+.modal-link{color:var(--g);text-decoration:none;}
 
-    /* ── APP SCREEN ── */
-    #app-screen { display: none; }
+/* TOPBAR */
+.topbar{background:var(--bg2);border-bottom:0.5px solid var(--b);padding:10px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;}
+.logo{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--g);letter-spacing:1px;}
+.logo span{color:var(--t2);font-weight:400;}
+.profile-pill{margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--bg3);border:0.5px solid var(--b2);border-radius:20px;padding:4px 10px;}
+.profile-pill select{background:transparent;border:none;color:var(--t2);font-size:11px;font-family:'Barlow',sans-serif;outline:none;cursor:pointer;}
+.profile-pill select option{background:#1a2220;}
+.key-indicator{width:8px;height:8px;border-radius:50%;background:var(--co);cursor:pointer;flex-shrink:0;margin-left:4px;}
+.key-indicator.ok{background:var(--g);}
 
-    header {
-      background: #111;
-      border-bottom: 1px solid #222;
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .header-left { display: flex; align-items: center; gap: 12px; }
-    .header-logo { font-size: 1.5rem; }
-    .header-title { font-size: 1.1rem; font-weight: 700; color: #00c864; }
-    .header-user { font-size: 0.8rem; color: #666; }
-    .logout-btn {
-      background: transparent;
-      border: 1px solid #333;
-      color: #888;
-      border-radius: 8px;
-      padding: 8px 16px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .logout-btn:hover { border-color: #ff4444; color: #ff4444; }
+/* STATS */
+.stats{display:flex;gap:6px;padding:10px 16px;background:var(--bg2);border-bottom:0.5px solid var(--b);}
+.st{flex:1;background:var(--bg3);border-radius:8px;padding:7px 9px;border:0.5px solid var(--b);}
+.st-l{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
+.st-v{font-size:15px;font-weight:600;font-family:'Barlow Condensed',sans-serif;color:var(--g);}
+.st-v.am{color:var(--am);}
+.st-v.co{color:var(--co);font-size:10px;}
 
-    .container { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+/* NAV */
+.nav{display:flex;background:var(--bg2);border-bottom:0.5px solid var(--b);overflow-x:auto;}
+.nav::-webkit-scrollbar{display:none;}
+.nb{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;padding:9px 13px;border:none;background:transparent;color:var(--t3);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s;display:flex;align-items:center;gap:5px;}
+.nb i{font-size:13px;}
+.nb:hover{color:var(--t2);}
+.nb.active{color:var(--gl);border-bottom-color:var(--g);}
 
-    .hero {
-      text-align: center;
-      padding: 40px 0 32px;
-    }
-    .hero h1 {
-      font-size: 2.2rem;
-      font-weight: 800;
-      background: linear-gradient(90deg, #00c864, #00aaff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 12px;
-    }
-    .hero p { color: #888; font-size: 1rem; max-width: 520px; margin: 0 auto; }
+.panel{display:none;flex-direction:column;flex:1;}
+.panel.show{display:flex;}
 
-    .card {
-      background: #111;
-      border: 1px solid #222;
-      border-radius: 12px;
-      padding: 24px;
-      margin-bottom: 24px;
-    }
-    .card h2 {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #00c864;
-      margin-bottom: 16px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
+/* CHAT */
+.chat-area{padding:12px 14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;flex:1;min-height:300px;max-height:420px;}
+.chat-area::-webkit-scrollbar{width:3px;}
+.chat-area::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;}
+.msg{display:flex;flex-direction:column;max-width:92%;}
+.msg.u{align-self:flex-end;align-items:flex-end;}
+.msg.a{align-self:flex-start;}
+.bub{padding:9px 12px;border-radius:12px;font-size:12px;line-height:1.6;}
+.msg.a .bub{background:var(--bg3);border:0.5px solid var(--b);border-radius:4px 12px 12px 12px;color:var(--t);}
+.msg.u .bub{background:var(--gd);border-radius:12px 4px 12px 12px;color:#d4f0e6;}
+.mlabel{font-size:9px;font-family:'DM Mono',monospace;color:var(--g);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;padding-left:2px;}
+.bl{background:var(--bg4);border-left:2px solid var(--g);border-radius:0 6px 6px 0;padding:7px 10px;margin-top:5px;}
+.bl.er{border-color:var(--co);}
+.bl.cr{border-color:var(--am);}
+.bl.ad{border-color:var(--gd);background:var(--gg);}
+.bl-t{font-size:9px;font-family:'DM Mono',monospace;color:var(--g);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.bl.er .bl-t{color:var(--co);}
+.bl.cr .bl-t{color:var(--am);}
+.bl-x{font-size:11px;color:var(--t2);line-height:1.5;}
+.bl.ad .bl-x{color:var(--gl);font-style:italic;}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
+.tg{font-size:9px;padding:2px 7px;border-radius:10px;font-family:'DM Mono',monospace;background:var(--gg);color:var(--gl);border:0.5px solid var(--gd);}
+.typing{display:none;align-items:center;gap:5px;padding:9px 12px;background:var(--bg3);border:0.5px solid var(--b);border-radius:4px 12px 12px 12px;width:fit-content;}
+.typing.show{display:flex;}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--g);animation:bounce 1.2s infinite;}
+.dot:nth-child(2){animation-delay:.2s;}
+.dot:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;}
+.empty-ic{width:44px;height:44px;border-radius:10px;background:var(--gg);border:0.5px solid var(--gd);display:flex;align-items:center;justify-content:center;}
+.empty-ic i{font-size:22px;color:var(--g);}
+.empty-t{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;}
+.empty-s{font-size:12px;color:var(--t2);line-height:1.6;max-width:260px;}
+.suggs{display:flex;flex-direction:column;gap:5px;width:100%;max-width:300px;}
+.sug{background:var(--bg3);border:0.5px solid var(--b2);border-radius:7px;padding:8px 10px;font-size:11px;color:var(--t2);cursor:pointer;text-align:left;transition:all .15s;line-height:1.4;}
+.sug:hover{border-color:var(--gd);color:var(--gl);background:var(--gg);}
+.modes-row{display:flex;gap:5px;padding:8px 14px;background:var(--bg2);border-top:0.5px solid var(--b);border-bottom:0.5px solid var(--b);overflow-x:auto;}
+.modes-row::-webkit-scrollbar{display:none;}
+.mb{white-space:nowrap;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:500;padding:4px 10px;border-radius:5px;border:0.5px solid var(--b2);background:var(--bg3);color:var(--t2);cursor:pointer;transition:all .15s;}
+.mb:hover{border-color:var(--gd);color:var(--gl);}
+.mb.active{background:var(--gg);border-color:var(--g);color:var(--gl);}
+.inp-area{padding:10px 14px;background:var(--bg2);display:flex;gap:7px;align-items:flex-end;border-top:0.5px solid var(--b);}
+.inp-wrap{flex:1;background:var(--bg3);border:0.5px solid var(--b2);border-radius:9px;padding:7px 11px;transition:border-color .15s;}
+.inp-wrap:focus-within{border-color:var(--gd);}
+.inp-ctx{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace;margin-bottom:3px;}
+.inp-f{background:transparent;border:none;outline:none;color:var(--t);font-size:12px;font-family:'Barlow',sans-serif;resize:none;width:100%;min-height:32px;max-height:72px;line-height:1.5;}
+.inp-f::placeholder{color:var(--t3);}
+.sbtn{width:34px;height:34px;border-radius:7px;background:var(--g);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sbtn:hover{background:var(--gd);}
+.sbtn i{color:#fff;font-size:15px;}
+.sbtn:disabled{background:var(--bg4);cursor:not-allowed;}
+.sbtn:disabled i{color:var(--t3);}
+.errmsg{font-size:11px;color:var(--co);padding:4px 14px;font-style:italic;}
 
-    .modules-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-    }
-    .module-btn {
-      background: #1a1a1a;
-      border: 1px solid #2a2a2a;
-      border-radius: 10px;
-      padding: 20px 16px;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-align: center;
-      color: #f0f0f0;
-    }
-    .module-btn:hover {
-      border-color: #00c864;
-      background: rgba(0,200,100,0.06);
-      transform: translateY(-2px);
-    }
-    .module-icon { font-size: 2rem; margin-bottom: 8px; }
-    .module-name { font-size: 0.95rem; font-weight: 600; }
-    .module-desc { font-size: 0.78rem; color: #666; margin-top: 4px; }
-
-    .question-section { display: none; }
-    .question-section.active { display: block; }
-
-    textarea {
-      width: 100%;
-      background: #1a1a1a;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 14px;
-      color: #f0f0f0;
-      font-size: 0.95rem;
-      font-family: inherit;
-      resize: vertical;
-      min-height: 100px;
-      outline: none;
-      transition: border 0.2s;
-    }
-    textarea:focus { border-color: #00c864; }
-
-    .send-btn {
-      background: #00c864;
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      padding: 12px 28px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      cursor: pointer;
-      margin-top: 12px;
-      transition: all 0.2s;
-    }
-    .send-btn:hover { background: #00e070; transform: translateY(-1px); }
-    .send-btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; }
-
-    .response-box {
-      background: #0f1f17;
-      border: 1px solid #1a3a28;
-      border-radius: 10px;
-      padding: 20px;
-      margin-top: 20px;
-      display: none;
-      line-height: 1.7;
-      font-size: 0.95rem;
-      white-space: pre-wrap;
-    }
-    .response-box.visible { display: block; }
-
-    .back-btn {
-      background: transparent;
-      border: 1px solid #333;
-      color: #888;
-      border-radius: 8px;
-      padding: 8px 16px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      margin-bottom: 20px;
-      transition: all 0.2s;
-    }
-    .back-btn:hover { border-color: #555; color: #ccc; }
-
-    .spinner {
-      display: inline-block;
-      width: 16px; height: 16px;
-      border: 2px solid #333;
-      border-top-color: #00c864;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      vertical-align: middle;
-      margin-right: 8px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    footer {
-      text-align: center;
-      padding: 32px 24px;
-      color: #444;
-      font-size: 0.8rem;
-      border-top: 1px solid #1a1a1a;
-      margin-top: 40px;
-    }
-  </style>
+/* ESQUEMAS */
+.ctrl-bar{display:flex;gap:8px;padding:10px 14px;background:var(--bg2);border-bottom:0.5px solid var(--b);}
+.cg{display:flex;flex-direction:column;gap:3px;}
+.cl{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.4px;}
+.cs{background:var(--bg3);border:0.5px solid var(--b2);border-radius:5px;padding:4px 8px;color:var(--t);font-size:11px;font-family:'Barlow',sans-serif;outline:none;cursor:pointer;}
+.pos-chips{display:flex;gap:5px;padding:8px 14px;flex-wrap:wrap;border-bottom:0.5px solid var(--b);}
+.pc{font-size:10px;font-family:'Barlow Condensed',sans-serif;font-weight:600;padding:4px 10px;border-radius:20px;border:0.5px solid var(--b2);background:var(--bg3);color:var(--t2);cursor:pointer;transition:all .15s;}
+.pc:hover{border-color:var(--gd);color:var(--gl);}
+.pc.active{background:var(--gg);border-color:var(--g);color:var(--gl);}
+.field-wrap{padding:12px;display:flex;justify-content:center;}
+canvas{border-radius:8px;max-width:100%;}
+.finfo{padding:0 14px 14px;display:flex;flex-direction:column;gap:7px;}
+.ic{background:var(--bg3);border:0.5px solid var(--b);border-radius:9px;padding:10px 12px;}
+.ic-t{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:5px;}
+.ic-x{font-size:11px;color:var(--t2);line-height:1.6;}
+.br2{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.mb2{background:var(--bg4);border-radius:7px;padding:7px 9px;border-left:2px solid var(--g);}
+.mb2.am{border-color:var(--am);}
+.mb2-t{font-size:9px;font-family:'DM Mono',monospace;color:var(--g);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px;}
+.mb2.am .mb2-t{color:var(--am);}
+.mb2-x{font-size:10px;color:var(--t2);line-height:1.4;}
+.adn{background:var(--gg);border:0.5px solid var(--gd);border-radius:7px;padding:9px 12px;font-size:12px;color:var(--gl);font-style:italic;font-family:'Barlow Condensed',sans-serif;text-align:center;margin-top:4px;}
+</style>
 </head>
 <body>
 
-<!-- ══════════════ LOGIN SCREEN ══════════════ -->
-<div id="login-screen">
-  <div class="login-card">
-    <div class="login-logo">⚽</div>
-    <div class="login-title">Football IQ</div>
-    <div class="login-subtitle">Coach cognitivo élite — Acceso privado</div>
-
-    <label>Email</label>
-    <input type="email" id="login-email" placeholder="tu@email.com" autocomplete="email"/>
-
-    <label>Contraseña</label>
-    <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
-
-    <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
-    <div class="login-error" id="login-error"></div>
+<!-- MODAL API KEY -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-logo">FOOTBALL <span>IQ</span></div>
+    <div class="modal-title">Ingresa tu API Key</div>
+    <div class="modal-sub">Para activar el coach necesitas tu API key de Anthropic. Se guarda solo en tu navegador.</div>
+    <input class="modal-inp" id="key-inp" type="password" placeholder="sk-ant-api03-..." onkeydown="if(event.key==='Enter')saveKey()"/>
+    <button class="modal-btn" onclick="saveKey()">Activar coach →</button>
+    <div class="modal-note">
+      Obtén tu key gratis en <a class="modal-link" href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com</a><br>
+      Tu key nunca se envía a ningún servidor externo.
+    </div>
   </div>
 </div>
 
-<!-- ══════════════ APP SCREEN ══════════════ -->
-<div id="app-screen">
-  <header>
-    <div class="header-left">
-      <span class="header-logo">⚽</span>
-      <div>
-        <div class="header-title">Football IQ</div>
-        <div class="header-user" id="header-user-email"></div>
-      </div>
+<div class="app">
+  <div class="topbar">
+    <div class="logo">FOOTBALL <span>IQ</span></div>
+    <div class="profile-pill">
+      <select id="pos" onchange="upCtx()">
+        <option value="mediocentro">Mediocentro</option>
+        <option value="central">Central</option>
+        <option value="lateral">Lateral</option>
+        <option value="interior">Interior</option>
+        <option value="extremo">Extremo</option>
+        <option value="delantero">Delantero</option>
+      </select>
+      <span style="color:var(--b2)">·</span>
+      <select id="fmt" onchange="upCtx()">
+        <option value="Fútbol 6" selected>F6</option>
+        <option value="Fútbol 7">F7</option>
+        <option value="Fútbol 11">F11</option>
+      </select>
+      <div class="key-indicator" id="key-dot" onclick="resetKey()" title="Click para cambiar API key"></div>
     </div>
-    <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
-  </header>
+  </div>
 
-  <div class="container">
-    <!-- HOME -->
-    <div id="home-section">
-      <div class="hero">
-        <h1>Tu Coach Cognitivo</h1>
-        <p>Análisis táctico, desarrollo mental y preparación de élite para futbolistas profesionales.</p>
-      </div>
+  <div class="stats">
+    <div class="st"><div class="st-l">Sesiones</div><div class="st-v" id="ss">0</div></div>
+    <div class="st"><div class="st-l">Error detectado</div><div class="st-v co" id="se">—</div></div>
+    <div class="st"><div class="st-l">Módulo</div><div class="st-v am" id="sm">Coach</div></div>
+  </div>
 
-      <div class="card">
-        <h2>Módulos de entrenamiento</h2>
-        <div class="modules-grid">
-          <div class="module-btn" onclick="openModule('tactica')">
-            <div class="module-icon">🧠</div>
-            <div class="module-name">Análisis Táctico</div>
-            <div class="module-desc">Sistemas, posicionamiento y lectura del juego</div>
-          </div>
-          <div class="module-btn" onclick="openModule('mental')">
-            <div class="module-icon">💪</div>
-            <div class="module-name">Preparación Mental</div>
-            <div class="module-desc">Concentración, presión y rendimiento bajo estrés</div>
-          </div>
-          <div class="module-btn" onclick="openModule('video')">
-            <div class="module-icon">🎬</div>
-            <div class="module-name">Análisis de Video</div>
-            <div class="module-desc">Estudio de rivales y autoevaluación</div>
-          </div>
-          <div class="module-btn" onclick="openModule('fisico')">
-            <div class="module-icon">⚡</div>
-            <div class="module-name">Preparación Física</div>
-            <div class="module-desc">Periodización, recuperación y peak performance</div>
-          </div>
-          <div class="module-btn" onclick="openModule('comunicacion')">
-            <div class="module-icon">🗣️</div>
-            <div class="module-name">Comunicación</div>
-            <div class="module-desc">Liderazgo, vestuario y relación con el cuerpo técnico</div>
-          </div>
-          <div class="module-btn" onclick="openModule('carrera')">
-            <div class="module-icon">🏆</div>
-            <div class="module-name">Gestión de Carrera</div>
-            <div class="module-desc">Agentes, contratos, marca personal</div>
-          </div>
+  <div class="nav">
+    <button class="nb active" onclick="showPanel('coach',this)"><i class="ti ti-brain"></i>Coach IA</button>
+    <button class="nb" onclick="showPanel('esquemas',this)"><i class="ti ti-layout-grid"></i>Esquemas</button>
+  </div>
+
+  <!-- COACH -->
+  <div id="panel-coach" class="panel show">
+    <div class="modes-row">
+      <button class="mb active" onclick="setMode('Mentoría táctica',this)">Mentoría</button>
+      <button class="mb" onclick="setMode('Análisis de jugada',this)">Análisis</button>
+      <button class="mb" onclick="setMode('Entrenador cognitivo',this)">Cognitivo</button>
+      <button class="mb" onclick="setMode('Scout',this)">Scout</button>
+    </div>
+    <div class="chat-area" id="chat">
+      <div class="empty" id="empty">
+        <div class="empty-ic"><i class="ti ti-brain"></i></div>
+        <div class="empty-t">Coach élite listo</div>
+        <div class="empty-s">Describe una jugada o situación táctica y el coach analiza.</div>
+        <div class="suggs">
+          <button class="sug" onclick="fill('Salí a presionar y me superaron por el interior, quedó pasillo')">Salí a presionar y me superaron...</button>
+          <button class="sug" onclick="fill('¿Cómo posicionarme cuando el rival tiene balón en banda?')">¿Cómo posicionarme en banda?</button>
+          <button class="sug" onclick="fill('Llego siempre tarde a las jugadas')">Llego siempre tarde...</button>
         </div>
       </div>
     </div>
-
-    <!-- QUESTION SECTION -->
-    <div id="question-section" class="question-section">
-      <button class="back-btn" onclick="goHome()">← Volver</button>
-      <div class="card">
-        <h2 id="module-title">Módulo</h2>
-        <textarea id="user-question" placeholder="Escribe tu pregunta o situación aquí..."></textarea>
-        <button class="send-btn" id="send-btn" onclick="sendQuestion()">Analizar</button>
-        <div class="response-box" id="response-box"></div>
+    <div class="inp-area">
+      <div class="inp-wrap">
+        <div class="inp-ctx" id="ictx">Mediocentro · Fútbol 6 · Mentoría táctica</div>
+        <textarea class="inp-f" id="inp" placeholder="Describe una jugada o situación..." rows="1" onkeydown="hk(event)" oninput="ar(this)"></textarea>
       </div>
+      <button class="sbtn" id="sbtn" onclick="send()"><i class="ti ti-arrow-up"></i></button>
     </div>
+    <div class="errmsg" id="errmsg" style="display:none"></div>
   </div>
 
-  <footer>Football IQ © 2026 — Uso exclusivo de usuarios autorizados</footer>
+  <!-- ESQUEMAS -->
+  <div id="panel-esquemas" class="panel">
+    <div class="ctrl-bar">
+      <div class="cg"><div class="cl">Sistema</div>
+        <select class="cs" id="sysEl" onchange="renderField()">
+          <option value="0">2-1-2 (F6)</option>
+          <option value="1">2-2-1 (F6)</option>
+          <option value="2">3-2-1 (F7)</option>
+          <option value="3">4-3-3 (F11)</option>
+          <option value="4">4-2-3-1 (F11)</option>
+        </select>
+      </div>
+    </div>
+    <div class="pos-chips" id="pchips"></div>
+    <div class="field-wrap"><canvas id="fc" width="280" height="400"></canvas></div>
+    <div class="finfo" id="finfo"></div>
+  </div>
 </div>
 
 <script>
-  // ── SUPABASE CONFIG ──
-  const SUPABASE_URL = 'https://aljrqilzioroblnmxorp.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsanJxaWx6aW9yb2Jsbm14b3JwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NDQwODgsImV4cCI6MjA5NTMyMDA4OH0.I2qLPRmJdkyEKRMcQpv_z
+const SYS=`Eres una inteligencia futbolística avanzada. Piensas como jugador élite. Personalidad: Rodri, Busquets, Xavi, Guardiola. Calma extrema, claridad táctica.
+NUNCA feedback superficial. Responde SOLO en JSON puro sin backticks:
+{"mentalidad":"...","observacion":"...","error":"...","correccion":"...","ejercicio":"...","adn":"...","tags":["...","..."]}
+Adapta siempre a la posición y formato. Español siempre.`;
+
+// API KEY MANAGEMENT
+let apiKey = localStorage.getItem('fiq_key') || '';
+
+function checkKey(){
+  if(apiKey && apiKey.startsWith('sk-')){
+    document.getElementById('modal').style.display='none';
+    document.getElementById('key-dot').classList.add('ok');
+  } else {
+    document.getElementById('modal').style.display='flex';
+    document.getElementById('key-dot').classList.remove('ok');
+  }
+}
+
+function saveKey(){
+  const k = document.getElementById('key-inp').value.trim();
+  if(!k.startsWith('sk-')){
+    document.getElementById('key-inp').style.borderColor='var(--co)';
+    return;
+  }
+  apiKey = k;
+  localStorage.setItem('fiq_key', k);
+  checkKey();
+}
+
+function resetKey(){
+  if(confirm('¿Cambiar API key?')){
+    apiKey='';localStorage.removeItem('fiq_key');
+    document.getElementById('key-inp').value='';
+    document.getElementById('modal').style.display='flex';
+  }
+}
+
+// SCHEMES
+const SCHEMES=[
+  {name:"2-1-2",players:[{id:"POR",label:"POR",x:.5,y:.92,color:"#378ADD",role:"Portero"},{id:"DFC1",label:"DFC",x:.3,y:.72,color:"#1D9E75",role:"Def. central izq"},{id:"DFC2",label:"DFC",x:.7,y:.72,color:"#1D9E75",role:"Def. central der"},{id:"MCD",label:"6",x:.5,y:.52,color:"#EF9F27",role:"Mediocentro"},{id:"MC1",label:"MC",x:.28,y:.32,color:"#7F77DD",role:"Mediocampista izq"},{id:"MC2",label:"MC",x:.72,y:.32,color:"#7F77DD",role:"Mediocampista der"}],info:{"MCD":{zona:"Centro del campo",mision:"No persigues al rival — cubres la línea de pase más peligrosa.",error:"Salir a marcar al hombre y dejar el pasillo central.",correccion:"Posiciónate en la línea de pase. Deja que el rival venga.",adn:"El 6 no corre detrás del caos. Lo organiza."},"POR":{zona:"Área",mision:"Primer distribuidor. Salidas cortas siempre.",error:"Lanzar largo sin necesidad.",correccion:"Máximo 2 toques. Circula rápido.",adn:"El portero que piensa es el primer centrocampista."},"DFC1":{zona:"Banda izq baja",mision:"Control de profundidad. Tu pareja cubre el centro.",error:"Subir sin avisar al compañero.",correccion:"Comunica antes de subir.",adn:"Dos centrales son uno si se hablan."},"DFC2":{zona:"Banda der baja",mision:"Espejo del DFC izq. Temporiza bajo presión.",error:"Salir sin cobertura central.",correccion:"Temporiza. El 6 se reposiciona.",adn:"El central que temporiza gana sin correr."},"MC1":{zona:"Banda izq",mision:"Amplitud en ataque. Sin balón cierras al interior.",error:"Quedarte abierto cuando contraataca.",correccion:"Sin balón = cierre interior inmediato.",adn:"El que sabe cuándo no estar en banda gana."},"MC2":{zona:"Banda der",mision:"Espejo del MC izq. Nunca los dos arriba juntos.",error:"Subir los dos MC al mismo tiempo.",correccion:"Si el MC izq sube, tú te quedas.",adn:"La pareja sincronizada domina."}}},
+  {name:"2-2-1",players:[{id:"POR",label:"POR",x:.5,y:.92,color:"#378ADD",role:"Portero"},{id:"DFC1",label:"DFC",x:.3,y:.74,color:"#1D9E75",role:"Def. izquierdo"},{id:"DFC2",label:"DFC",x:.7,y:.74,color:"#1D9E75",role:"Def. derecho"},{id:"MC1",label:"MC",x:.28,y:.50,color:"#EF9F27",role:"Pivote izq"},{id:"MC2",label:"MC",x:.72,y:.50,color:"#EF9F27",role:"Pivote der"},{id:"DEL",label:"9",x:.5,y:.20,color:"#D85A30",role:"Delantero"}],info:{"POR":{zona:"Área",mision:"Salida limpia. Los pivotes necesitan balones cortos.",error:"Lanzar largo sin opción.",correccion:"Siempre salida corta.",adn:"El portero que construye vale por dos."},"DFC1":{zona:"Zona baja izq",mision:"Primer pase limpio al pivote izq.",error:"Conducir bajo presión.",correccion:"Máximo 2 toques.",adn:"El defensa que piensa rápido no sufre."},"DFC2":{zona:"Zona baja der",mision:"Cambio de orientación cuando comprimen.",error:"No dar el cambio cuando el lado está libre.",correccion:"Si comprimen izq, el cambio rompe todo.",adn:"El cambio de orientación es el arma más letal."},"MC1":{zona:"Centro-izq",mision:"Doble pivote. Uno atrae, el otro recibe libre.",error:"Ocupar el mismo espacio que tu compañero.",correccion:"Si él baja, tú subes. Espejo constante.",adn:"El doble pivote en espejo controla."},"MC2":{zona:"Centro-der",mision:"Espejo del MC izq. Triángulo con DFC y 9.",error:"Perder el triángulo.",correccion:"Mantén siempre dos opciones de pase.",adn:"El siempre disponible manda el juego."},"DEL":{zona:"Zona alta",mision:"Fijas centrales. Bajas a crear superioridad.",error:"Alejarte esperando el pase largo.",correccion:"Baja a recibir al pie.",adn:"El 9 que baja libera espacio para todos."}}},
+  {name:"3-2-1",players:[{id:"POR",label:"POR",x:.5,y:.93,color:"#378ADD",role:"Portero"},{id:"DFC1",label:"DFC",x:.2,y:.74,color:"#1D9E75",role:"Central izq"},{id:"DFC2",label:"DFC",x:.5,y:.76,color:"#1D9E75",role:"Central"},{id:"DFC3",label:"DFC",x:.8,y:.74,color:"#1D9E75",role:"Central der"},{id:"MC1",label:"6",x:.33,y:.52,color:"#EF9F27",role:"Pivote izq"},{id:"MC2",label:"6",x:.67,y:.52,color:"#EF9F27",role:"Pivote der"},{id:"DEL",label:"9",x:.5,y:.22,color:"#D85A30",role:"Delantero"}],info:{"POR":{zona:"Área",mision:"Con 3 centrales siempre tienes salida.",error:"Salir tarde con presión.",correccion:"Lee mientras el balón viene.",adn:"El portero que decide antes no pierde."},"DFC1":{zona:"Banda izq baja",mision:"Puedes subir más. Avisa al pivote.",error:"Subir sin comunicar.",correccion:"Comunicación antes de subir.",adn:"El lateral en 3 es mediocampista disfrazado."},"DFC2":{zona:"Centro bajo",mision:"Ancla. Diriges la línea.",error:"Adelantar sin avisar.",correccion:"La línea se mueve junta.",adn:"El central que habla organiza todo."},"DFC3":{zona:"Banda der baja",mision:"Espejo del DFC1.",error:"Subir los dos laterales juntos.",correccion:"Un lateral arriba, el otro cubriendo.",adn:"La disciplina posicional es la táctica más difícil."},"MC1":{zona:"Centro-izq",mision:"Con 3 defensas tienes libertad. Coordina.",error:"Los dos pivotes subiendo juntos.",correccion:"Uno presiona, el otro cubre.",adn:"El doble pivote que rota es el más peligroso."},"MC2":{zona:"Centro-der",mision:"Atrae presión para liberar al compañero.",error:"No aprovechar la superioridad.",correccion:"Atraes → compañero recibe → progresión.",adn:"La superioridad no vale si no la activas."},"DEL":{zona:"Zona alta",mision:"Fija centrales. Baja a activar.",error:"Esperar parado.",correccion:"Fija, baja, abre espacio, repite.",adn:"El que se mueve sin balón es el más difícil de marcar."}}},
+  {name:"4-3-3",players:[{id:"POR",label:"POR",x:.5,y:.93,color:"#378ADD",role:"Portero"},{id:"LAT1",label:"LAT",x:.12,y:.75,color:"#1D9E75",role:"Lateral izq"},{id:"DFC1",label:"DFC",x:.35,y:.78,color:"#1D9E75",role:"Central izq"},{id:"DFC2",label:"DFC",x:.65,y:.78,color:"#1D9E75",role:"Central der"},{id:"LAT2",label:"LAT",x:.88,y:.75,color:"#1D9E75",role:"Lateral der"},{id:"MCD",label:"6",x:.5,y:.58,color:"#EF9F27",role:"Mediocentro"},{id:"MC1",label:"8",x:.28,y:.44,color:"#7F77DD",role:"Interior izq"},{id:"MC2",label:"8",x:.72,y:.44,color:"#7F77DD",role:"Interior der"},{id:"EXT1",label:"11",x:.1,y:.23,color:"#D85A30",role:"Extremo izq"},{id:"DEL",label:"9",x:.5,y:.18,color:"#D85A30",role:"Delantero"},{id:"EXT2",label:"7",x:.9,y:.23,color:"#D85A30",role:"Extremo der"}],info:{"POR":{zona:"Área",mision:"Primer distribuidor.",error:"No participar en construcción.",correccion:"Siempre disponible.",adn:"El portero con los pies libera al equipo."},"MCD":{zona:"Centro",mision:"El ancla. Nunca abandonas el centro.",error:"Subir con los interiores.",correccion:"Los interiores suben — tú cubres.",adn:"El 6 que se queda gana para todos."},"MC1":{zona:"Interior izq",mision:"El tercer hombre entre líneas.",error:"Quedarte estático.",correccion:"Movimiento constante para desmarcar.",adn:"El interior entre líneas rompe cualquier bloque."},"MC2":{zona:"Interior der",mision:"Espejo del interior izq.",error:"Los dos interiores arriba sin cobertura.",correccion:"Uno sube, el otro en posición intermedia.",adn:"El que sabe cuándo no subir controla el tempo."},"LAT1":{zona:"Banda izq",mision:"Amplitud. Sin balón cierras interior.",error:"Subir cuando el extremo ya está en banda.",correccion:"Si extremo abre, tú entras interior.",adn:"El lateral que entiende al extremo es arma táctica."},"LAT2":{zona:"Banda der",mision:"Espejo del lateral izq.",error:"Quedarte en banda cuando extremo entró.",correccion:"Si el 7 entra, tú subes. Crea 2v1.",adn:"El lateral tarde al área marca la diferencia."},"DFC1":{zona:"Zona baja izq",mision:"Control del espacio a espaldas.",error:"Seguir al delantero al centro.",correccion:"Mantén posición. El 6 presiona.",adn:"El central en su zona es el más difícil de superar."},"DFC2":{zona:"Zona baja der",mision:"Pareja del DFC1. Comunicación.",error:"Adelantar sin coordinar.",correccion:"La línea se mueve junta.",adn:"Dos centrales que piensan igual valen por cuatro."},"EXT1":{zona:"Banda izq",mision:"Fijas al lateral rival.",error:"Pedir el balón de espaldas.",correccion:"Pide cuando puedes recibir de cara.",adn:"El extremo que fija sin tocar ya trabajó."},"DEL":{zona:"Zona alta",mision:"Fijas centrales, liberas interiores.",error:"Bajar demasiado.",correccion:"Si bajas, un interior ocupa tu zona.",adn:"El 9 que fija sin tocar vale más."},"EXT2":{zona:"Banda der",mision:"Espejo del extremo izq.",error:"Quedarse en banda cuando lateral subió.",correccion:"Si lateral sube, tú entras.",adn:"El extremo que entra crea el 2v1 inesperado."}}},
+  {name:"4-2-3-1",players:[{id:"POR",label:"POR",x:.5,y:.93,color:"#378ADD",role:"Portero"},{id:"LAT1",label:"LAT",x:.12,y:.76,color:"#1D9E75",role:"Lateral izq"},{id:"DFC1",label:"DFC",x:.35,y:.79,color:"#1D9E75",role:"Central izq"},{id:"DFC2",label:"DFC",x:.65,y:.79,color:"#1D9E75",role:"Central der"},{id:"LAT2",label:"LAT",x:.88,y:.76,color:"#1D9E75",role:"Lateral der"},{id:"MCD1",label:"6",x:.36,y:.59,color:"#EF9F27",role:"Pivote izq"},{id:"MCD2",label:"6",x:.64,y:.59,color:"#EF9F27",role:"Pivote der"},{id:"EXT1",label:"11",x:.14,y:.36,color:"#7F77DD",role:"Mediapunta izq"},{id:"MC",label:"10",x:.5,y:.33,color:"#7F77DD",role:"Mediapunta (10)"},{id:"EXT2",label:"7",x:.86,y:.36,color:"#7F77DD",role:"Mediapunta der"},{id:"DEL",label:"9",x:.5,y:.15,color:"#D85A30",role:"Delantero"}],info:{"POR":{zona:"Área",mision:"Con doble pivote siempre tienes salida.",error:"Retener con presión.",correccion:"Dos toques máximo.",adn:"El portero rápido libera el doble pivote."},"MCD1":{zona:"Centro izq",mision:"Escudo. Cuando uno presiona, el otro cubre.",error:"Los dos presionando juntos.",correccion:"Uno sale, el otro se queda.",adn:"El doble pivote que rota es el corazón."},"MCD2":{zona:"Centro der",mision:"Mantén equilibrio con tu compañero.",error:"Perder posición para ayudar en ataque.",correccion:"Si subes, tu compañero cubre.",adn:"El pivote equilibrado gana el partido defensivo."},"MC":{zona:"Centro ofensivo",mision:"El cerebro. Activas al 9 y mediapuntas.",error:"Bajar demasiado.",correccion:"Tu zona es entre líneas.",adn:"El 10 entre líneas decide el partido."},"EXT1":{zona:"Banda-interior izq",mision:"Entra al interior. No eres extremo puro.",error:"Quedarte en banda.",correccion:"Entra al interior. Triángulos.",adn:"La mediapunta que entra rompe el bloque."},"EXT2":{zona:"Banda-interior der",mision:"Espejo de la mediapunta izq.",error:"No coordinar con las otras.",correccion:"Los tres se mueven en bloque.",adn:"Tres mediapuntas juntas son imposibles de marcar."},"LAT1":{zona:"Banda izq",mision:"Si mediapunta entra, tú subes.",error:"Subir cuando ya está en tu zona.",correccion:"Lee el movimiento antes.",adn:"Lateral y mediapunta sincronizados son imbatibles."},"LAT2":{zona:"Banda der",mision:"Espejo del lateral izq.",error:"No leer el movimiento interior.",correccion:"Si mediapunta entra, crea 2v1.",adn:"El lateral que lee crea superioridad invisible."},"DFC1":{zona:"Zona baja izq",mision:"Con doble pivote tienes más cobertura.",error:"Confiar demasiado en los pivotes.",correccion:"Siempre alerta.",adn:"La cobertura existe para usarse, no relajarse."},"DFC2":{zona:"Zona baja der",mision:"El 4-2-3-1 es sólido. Mantén eso.",error:"Adelantar sin cobertura.",correccion:"Coordina con el pivote antes.",adn:"El central en bloque bajo gana tiempo."},"DEL":{zona:"Zona alta",mision:"Referencia fija. Fija y abre espacio.",error:"Dar la espalda al recibir.",correccion:"Pide de frente cuando puedas.",adn:"El 9 que protege el balón es el mejor asistente."}}},
+];
+
+let selScheme=0,selPos=null,chatMode='Mentoría táctica',history=[],loading=false,sessions=0;
+
+function showPanel(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('show');
+  btn.classList.add('active');
+  document.getElementById('sm').textContent=id==='coach'?'Coach':'Esquemas';
+  if(id==='esquemas')renderField();
+}
+function setMode(m,btn){chatMode=m;document.querySelectorAll('.mb').forEach(b=>b.classList.remove('active'));btn.classList.add('active');upCtx();}
+function upCtx(){const pos=document.getElementById('pos').value;const fmt=document.getElementById('fmt').value;document.getElementById('ictx').textContent=`${pos} · ${fmt} · ${chatMode}`;}
+function fill(t){const i=document.getElementById('inp');i.value=t;ar(i);i.focus();const e=document.getElementById('empty');if(e)e.remove();}
+function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,72)+'px';}
+function hk(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+function addMsg(role,content){
+  const chat=document.getElementById('chat');const e=document.getElementById('empty');if(e)e.remove();
+  const div=document.createElement('div');div.className='msg '+(role==='u'?'u':'a');
+  if(role==='u'){div.innerHTML=`<div class="bub">${esc(content)}</div>`;}
+  else{div.innerHTML=buildAI(content);}
+  chat.appendChild(div);chat.scrollTop=chat.scrollHeight;
+}
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function buildAI(d){
+  const tags=(d.tags||[]).map(t=>`<span class="tg">${esc(t)}</span>`).join('');
+  return `<div class="mlabel">Coach · ${chatMode}</div>
+  <div class="bub">
+    <div class="bl"><div class="bl-t">Mentalidad élite</div><div class="bl-x">${esc(d.mentalidad||'')}</div></div>
+    <div class="bl" style="margin-top:5px"><div class="bl-t">Qué observar</div><div class="bl-x">${esc(d.observacion||'')}</div></div>
+    ${d.error?`<div class="bl er" style="margin-top:5px"><div class="bl-t">Error invisible</div><div class="bl-x">${esc(d.error)}</div></div>`:''}
+    <div class="bl cr" style="margin-top:5px"><div class="bl-t">Corrección élite</div><div class="bl-x">${esc(d.correccion||'')}</div></div>
+    <div class="bl" style="margin-top:5px"><div class="bl-t">Ejercicio práctico</div><div class="bl-x">${esc(d.ejercicio||'')}</div></div>
+    <div class="bl ad" style="margin-top:5px"><div class="bl-t">ADN futbolístico</div><div class="bl-x">"${esc(d.adn||'')}"</div></div>
+    ${tags?`<div class="tags">${tags}</div>`:''}
+  </div>`;
+}
+function showTyping(){const chat=document.getElementById('chat');const t=document.createElement('div');t.id='typ';t.className='typing show';t.innerHTML='<div class="dot"></div><div class="dot"></div><div class="dot"></div>';chat.appendChild(t);chat.scrollTop=chat.scrollHeight;}
+function hideTyping(){const t=document.getElementById('typ');if(t)t.remove();}
+function showErr(m){const e=document.getElementById('errmsg');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',6000);}
+
+async function send(){
+  if(loading)return;
+  if(!apiKey){document.getElementById('modal').style.display='flex';return;}
+  const inp=document.getElementById('inp');const txt=inp.value.trim();if(!txt)return;
+  loading=true;document.getElementById('sbtn').disabled=true;document.getElementById('errmsg').style.display='none';
+  const pos=document.getElementById('pos').value;const fmt=document.getElementById('fmt').value;
+  const userMsg=`[Posición: ${pos} | Formato: ${fmt} | Modo: ${chatMode}]\n\n${txt}`;
+  addMsg('u',txt);inp.value='';ar(inp);showTyping();
+  history.push({role:'user',content:userMsg});
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:SYS,messages:history})
+    });
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error?.message||'Error API');
+    const raw=data.content?.[0]?.text||'{}';
+    let parsed;try{parsed=JSON.parse(raw.replace(/```json|```/g,'').trim());}catch{parsed={mentalidad:raw,observacion:'',error:'',correccion:'',ejercicio:'',adn:'El fútbol pertenece al que piensa antes.',tags:[]};}
+    history.push({role:'assistant',content:raw});
+    hideTyping();addMsg('a',parsed);
+    sessions++;document.getElementById('ss').textContent=sessions;
+    if(parsed.error&&parsed.error.length>3){document.getElementById('se').textContent=parsed.error.substring(0,16)+(parsed.error.length>16?'..':'');}
+  }catch(err){
+    hideTyping();
+    if(err.message.includes('401')||err.message.includes('auth')){
+      showErr('API key inválida. Click en el punto rojo para cambiarla.');
+      apiKey='';localStorage.removeItem('fiq_key');
+      document.getElementById('key-dot').classList.remove('ok');
+    } else {
+      showErr('Error al conectar. Intenta de nuevo.');
+    }
+    history.pop();
+  }
+  loading=false;document.getElementById('sbtn').disabled=false;
+}
+
+function renderField(){
+  selScheme=parseInt(document.getElementById('sysEl').value);selPos=null;drawChips();drawCanvas();drawFInfo(null);
+}
+function drawChips(){
+  const s=SCHEMES[selScheme];
+  document.getElementById('pchips').innerHTML=s.players.map(p=>`<button class="pc${selPos===p.id?' active':''}" onclick="selP('${p.id}')">${p.role}</button>`).join('');
+}
+function selP(id){selPos=selPos===id?null:id;drawChips();drawCanvas();drawFInfo(selPos);}
+function drawCanvas(){
+  const cv=document.getElementById('fc'),ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height;ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0a1f16';ctx.beginPath();ctx.roundRect(0,0,W,H,8);ctx.fill();
+  const pad=14,fw=W-pad*2,fh=H-pad*2;
+  ctx.strokeStyle='#1D9E7440';ctx.lineWidth=0.8;
+  ctx.strokeRect(pad,pad,fw,fh);
+  ctx.beginPath();ctx.moveTo(pad,pad+fh/2);ctx.lineTo(pad+fw,pad+fh/2);ctx.stroke();
+  ctx.beginPath();ctx.arc(W/2,pad+fh/2,22,0,Math.PI*2);ctx.stroke();
+  const bw=fw*.38,bh=fh*.1;ctx.strokeRect(pad+(fw-bw)/2,pad,bw,bh);ctx.strokeRect(pad+(fw-bw)/2,pad+fh-bh,bw,bh);
+  const s=SCHEMES[selScheme];
+  s.players.forEach(p=>{
+    const x=pad+p.x*fw,y=pad+p.y*fh;
+    const isSel=selPos===p.id,isOth=selPos&&!isSel;
+    if(isSel){ctx.fillStyle=p.color+'15';ctx.beginPath();ctx.arc(x,y,26,0,Math.PI*2);ctx.fill();ctx.strokeStyle=p.color;ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,y,26,0,Math.PI*2);ctx.stroke();}
+    ctx.globalAlpha=isOth?.3:1;ctx.fillStyle=isSel?p.color:p.color+'cc';
+    ctx.beginPath();ctx.arc(x,y,isSel?12:9,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font=`${isSel?'600':'500'} ${isSel?10:9}px 'Barlow Condensed',sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(p.label,x,y);
+    ctx.globalAlpha=isOth?.2:.8;ctx.fillStyle='#9FE1CB';ctx.font=`400 8px 'Barlow',sans-serif`;ctx.fillText(p.role.split(' ')[0],x,y+16);ctx.globalAlpha=1;
+  });
+}
+function drawFInfo(posId){
+  const area=document.getElementById('finfo');
+  if(!posId){area.innerHTML=`<div class="ic"><div class="ic-t" style="color:var(--g)">Sistema ${SCHEMES[selScheme].name}</div><div class="ic-x">Selecciona una posición para ver el análisis táctico.</div></div>`;return;}
+  const s=SCHEMES[selScheme];const p=s.players.find(p=>p.id===posId);const info=s.info[posId];if(!info)return;
+  area.innerHTML=`<div class="ic"><div class="ic-t" style="color:${p.color}">${p.role}</div><div class="ic-x">${info.mision}</div></div>
+  <div class="br2"><div class="mb2"><div class="mb2-t">Tu zona</div><div class="mb2-x">${info.zona}</div></div><div class="mb2 am"><div class="mb2-t">Error frecuente</div><div class="mb2-x">${info.error}</div></div></div>
+  <div class="mb2 am" style="border-radius:7px;padding:7px 9px"><div class="mb2-t">Corrección</div><div class="mb2-x">${info.correccion}</div></div>
+  <div class="adn">"${info.adn}"</div>`;
+}
+
+// INIT
+checkKey();upCtx();renderField();
+</script>
+</body>
+</html>
