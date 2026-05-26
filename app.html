@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Football IQ — Coach cognitivo élite</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+      min-height: 100vh;
+    }
+
+    /* ── LOGIN SCREEN ── */
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+    }
+    .login-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 16px;
+      padding: 48px 40px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(0,200,100,0.08);
+    }
+    .login-logo {
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+    }
+    .login-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #00c864;
+      margin-bottom: 4px;
+    }
+    .login-subtitle {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 32px;
+    }
+    .login-card label {
+      display: block;
+      text-align: left;
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .login-card input {
+      width: 100%;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #f0f0f0;
+      font-size: 1rem;
+      margin-bottom: 20px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .login-card input:focus { border-color: #00c864; }
+    .login-btn {
+      width: 100%;
+      background: #00c864;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 4px;
+    }
+    .login-btn:hover { background: #00e070; transform: translateY(-1px); }
+    .login-btn:active { transform: translateY(0); }
+    .login-btn:disabled { background: #444; color: #888; cursor: not-allowed; transform: none; }
+    .login-error {
+      background: rgba(255,60,60,0.12);
+      border: 1px solid rgba(255,60,60,0.3);
+      color: #ff6060;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.85rem;
+      margin-top: 16px;
+      display: none;
+    }
+
+    /* ── APP SCREEN ── */
+    #app-screen { display: none; }
+
+    header {
+      background: #111;
+      border-bottom: 1px solid #222;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-logo { font-size: 1.5rem; }
+    .header-title { font-size: 1.1rem; font-weight: 700; color: #00c864; }
+    .header-user { font-size: 0.8rem; color: #666; }
+    .logout-btn {
+      background: transparent;
+      border: 1px solid #333;
+      color: #888;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover { border-color: #ff4444; color: #ff4444; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+
+    .hero {
+      text-align: center;
+      padding: 40px 0 32px;
+    }
+    .hero h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, #00c864, #00aaff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+    .hero p { color: #888; font-size: 1rem; max-width: 520px; margin: 0 auto; }
+
+    .card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #00c864;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .module-btn {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 20px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      color: #f0f0f0;
+    }
+    .module-btn:hover {
+      border-color: #00c864;
+      background: rgba(0,200,100,0.06);
+      transform: translateY(-2px);
+    }
+    .module-icon { font-size: 2rem; margin-bottom: 8px; }
+    .module-name { font-size: 0.95rem; font-weight: 600; }
+    .module-desc { font-size: 0.78rem; color: #666; margin-top: 4px; }
+
+    .question-section { display: none; }
+    .question-section.active { display: block; }
+
+    textarea {
+      width: 100%;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 14px;
+      color: #f0f0f0;
+      font-size: 0.95rem;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 100px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    textarea:focus { border-color: #00c864; }
+
+    .send-btn {
+      background: #00c864;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 28px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: all 0.2s;
+    }
+    .send-btn:hover { background: #00e070; transform: translateY(-1px); }
+    .send-btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; }
+
+    .response-box {
+      background: #0f1f17;
+      border: 1px solid #1a3a28;
+      border-radius: 10px;
+      padding: 20px;
+      margin-top: 20px;
+      display: none;
+      line-height: 1.7;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+    }
+    .response-box.visible { display: block; }
+
+    .back-btn {
+      background: transparent;
+      border: 1px solid #333;
+      color: #888;
+      border-radius: 8px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      margin-bottom: 20px;
+      transition: all 0.2s;
+    }
+    .back-btn:hover { border-color: #555; color: #ccc; }
+
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid #333;
+      border-top-color: #00c864;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      color: #444;
+      font-size: 0.8rem;
+      border-top: 1px solid #1a1a1a;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN SCREEN ══════════════ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">⚽</div>
+    <div class="login-title">Football IQ</div>
+    <div class="login-subtitle">Coach cognitivo élite — Acceso privado</div>
+
+    <label>Email</label>
+    <input type="email" id="login-email" placeholder="tu@email.com" autocomplete="email"/>
+
+    <label>Contraseña</label>
+    <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
+
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ══════════════ APP SCREEN ══════════════ -->
+<div id="app-screen">
+  <header>
+    <div class="header-left">
+      <span class="header-logo">⚽</span>
+      <div>
+        <div class="header-title">Football IQ</div>
+        <div class="header-user" id="header-user-email"></div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Cerrar sesión</button>
+  </header>
+
+  <div class="container">
+    <!-- HOME -->
+    <div id="home-section">
+      <div class="hero">
+        <h1>Tu Coach Cognitivo</h1>
+        <p>Análisis táctico, desarrollo mental y preparación de élite para futbolistas profesionales.</p>
+      </div>
+
+      <div class="card">
+        <h2>Módulos de entrenamiento</h2>
+        <div class="modules-grid">
+          <div class="module-btn" onclick="openModule('tactica')">
+            <div class="module-icon">🧠</div>
+            <div class="module-name">Análisis Táctico</div>
+            <div class="module-desc">Sistemas, posicionamiento y lectura del juego</div>
+          </div>
+          <div class="module-btn" onclick="openModule('mental')">
+            <div class="module-icon">💪</div>
+            <div class="module-name">Preparación Mental</div>
+            <div class="module-desc">Concentración, presión y rendimiento bajo estrés</div>
+          </div>
+          <div class="module-btn" onclick="openModule('video')">
+            <div class="module-icon">🎬</div>
+            <div class="module-name">Análisis de Video</div>
+            <div class="module-desc">Estudio de rivales y autoevaluación</div>
+          </div>
+          <div class="module-btn" onclick="openModule('fisico')">
+            <div class="module-icon">⚡</div>
+            <div class="module-name">Preparación Física</div>
+            <div class="module-desc">Periodización, recuperación y peak performance</div>
+          </div>
+          <div class="module-btn" onclick="openModule('comunicacion')">
+            <div class="module-icon">🗣️</div>
+            <div class="module-name">Comunicación</div>
+            <div class="module-desc">Liderazgo, vestuario y relación con el cuerpo técnico</div>
+          </div>
+          <div class="module-btn" onclick="openModule('carrera')">
+            <div class="module-icon">🏆</div>
+            <div class="module-name">Gestión de Carrera</div>
+            <div class="module-desc">Agentes, contratos, marca personal</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUESTION SECTION -->
+    <div id="question-section" class="question-section">
+      <button class="back-btn" onclick="goHome()">← Volver</button>
+      <div class="card">
+        <h2 id="module-title">Módulo</h2>
+        <textarea id="user-question" placeholder="Escribe tu pregunta o situación aquí..."></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendQuestion()">Analizar</button>
+        <div class="response-box" id="response-box"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Football IQ © 2026 — Uso exclusivo de usuarios autorizados</footer>
+</div>
+
+<script>
+  // ── SUPABASE CONFIG ──
+  const SUPABASE_URL = 'https://aljrqilzioroblnmxorp.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsanJxaWx6aW9yb2Jsbm14b3JwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk3NDQwODgsImV4cCI6MjA5NTMyMDA4OH0.I2qLPRmJdkyEKRMcQpv_z

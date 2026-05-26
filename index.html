@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Football IQ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- Pantalla de Login/Registro -->
+    <div id="pantalla-auth" class="pantalla activa">
+      <div class="card">
+        <h1>⚽ Football IQ</h1>
+        <p class="subtitle">Tu coach táctico inteligente</p>
+
+        <div class="tabs">
+          <button class="tab activo" onclick="mostrarTab('login')">Login</button>
+          <button class="tab" onclick="mostrarTab('registro')">Registro</button>
+        </div>
+
+        <!-- Login -->
+        <form id="form-login">
+          <input type="email" id="login-email" placeholder="Email" required>
+          <input type="password" id="login-pass" placeholder="Contraseña" required>
+          <button type="submit">Entrar</button>
+        </form>
+
+        <!-- Registro -->
+        <form id="form-registro" class="oculto">
+          <input type="email" id="reg-email" placeholder="Email" required>
+          <input type="password" id="reg-pass" placeholder="Contraseña" required>
+          <input type="text" id="reg-nombre" placeholder="Tu nombre" required>
+          <select id="reg-posicion">
+            <option value="">Posición</option>
+            <option>Portero</option><option>Defensa</option>
+            <option>Centrocampista</option><option>Delantero</option>
+          </select>
+          <select id="reg-formato">
+            <option value="">Formato</option>
+            <option>11v11</option><option>7v7</option><option>5v5</option>
+          </select>
+          <select id="reg-nivel">
+            <option value="">Nivel</option>
+            <option>Amateur</option><option>Semi-profesional</option><option>Profesional</option>
+          </select>
+          <button type="submit">Registrarse</button>
+        </form>
+
+        <p id="auth-msg" class="mensaje"></p>
+      </div>
+    </div>
+
+    <!-- Pantalla principal del coach -->
+    <div id="pantalla-coach" class="pantalla oculto">
+      <header>
+        <span id="saludo">Hola, jugador</span>
+        <button onclick="logout()">Salir</button>
+      </header>
+
+      <div class="coach-container">
+        <div class="modos">
+          <button class="modo-btn activo" data-modo="analisis">🧠 Análisis</button>
+          <button class="modo-btn" data-modo="entrenamiento">💪 Entrenamiento</button>
+          <button class="modo-btn" data-modo="errores">⚠️ Errores</button>
+          <button class="modo-btn" data-modo="partido">🎮 Partido</button>
+        </div>
+
+        <div id="chat">
+          <div id="mensajes"></div>
+          <div class="input-area">
+            <textarea id="input-msg" placeholder="Escribe tu consulta al coach..."></textarea>
+            <button id="btn-enviar">Enviar</button>
+          </div>
+        </div>
+
+        <div id="panel-errores" class="oculto">
+          <h3>Errores frecuentes</h3>
+          <ul id="lista-errores"></ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
