@@ -1250,7 +1250,8 @@
             <option value="Futbol 11">Futbol 11</option>
           </select>
         </div>
-        <button class="save-btn" style="width:100%;margin-top:4px" onclick="saveProfile()">Guardar y empezar</button>
+        <button id="profile-save-btn" class="save-btn" style="width:100%;margin-top:4px" onclick="saveProfile()">Guardar y empezar</button>
+        <div id="profile-error" style="display:none;margin-top:10px;padding:10px 14px;background:var(--red-dim);border:1px solid var(--red);border-radius:7px;font-size:13px;color:var(--red);word-break:break-word"></div>
       </div>
     </div>
   </div>
@@ -1424,27 +1425,45 @@ async function loadProfile() {
 
 async function saveProfile() {
   if (!currentUser) return;
+  const btn = document.getElementById('profile-save-btn');
+  const errEl = document.getElementById('profile-error');
   const nombre = document.getElementById('profile-nombre').value.trim();
   const posicion = document.getElementById('profile-posicion').value;
   const formato = document.getElementById('profile-formato').value;
+
   if (!nombre) {
     document.getElementById('profile-nombre').focus();
     return;
   }
 
-  const { error } = await sb.from('jugadores').upsert({
-    id: currentUser.id,
-    nombre,
-    posicion,
-    formato
-  }, { onConflict: 'id' });
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
 
-  if (!error) {
-    playerProfile = { id: currentUser.id, nombre, posicion, formato };
-    document.getElementById('welcome-modal').classList.remove('open');
-    document.getElementById('user-display').textContent = nombre;
-    updateWelcomeMessage();
+  const payload = { id: currentUser.id, nombre, posicion, formato };
+  if (playerProfile?.equipo_id) payload.equipo_id = playerProfile.equipo_id;
+
+  const { data, error } = await sb.from('jugadores')
+    .upsert(payload, { onConflict: 'id' })
+    .select()
+    .maybeSingle();
+
+  console.log('[saveProfile] data:', data, 'error:', error);
+
+  btn.disabled = false;
+  btn.textContent = 'Guardar y empezar';
+
+  if (error) {
+    console.error('[saveProfile]', error.code, error.message, error.details, error.hint);
+    errEl.textContent = error.message;
+    errEl.style.display = 'block';
+    return;
   }
+
+  playerProfile = data || { ...payload };
+  document.getElementById('welcome-modal').classList.remove('open');
+  document.getElementById('user-display').textContent = nombre;
+  updateWelcomeMessage();
 }
 
 function updateWelcomeMessage() {
