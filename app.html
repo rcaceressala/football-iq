@@ -2908,9 +2908,18 @@ async function analyzeVideo() {
     clearInterval(serverInterval);
     serverInterval = null;
 
-    const data = await res.json();
+    // Leer como texto primero para manejar respuestas no-JSON
+    // (ej: "Request Entity Too Large" de Vercel en HTTP 413)
+    const responseText = await res.text();
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch {
+      console.error('[analyzeVideo] Respuesta no-JSON del servidor:', res.status, responseText.slice(0, 300));
+      throw new Error(`Error del servidor (HTTP ${res.status}): ${responseText.slice(0, 200)}`);
+    }
     if (!res.ok || data.error) {
-      throw new Error(data.error || 'Error en el servidor');
+      throw new Error(data.error || `Error del servidor (HTTP ${res.status})`);
     }
 
     setProgress(100, 'Análisis completado ✓');
