@@ -2834,97 +2834,101 @@ function setProgress(pct, label) {
   document.getElementById('progress-label').textContent = label;
 }
 
-// ── Lee un File como base64 DataURL via FileReader ──────────────────────────
-// El servidor (ffmpeg) se encarga de extraer los frames; el cliente solo
-// sube el video en base64. Esto evita cualquier problema de Canvas/drawImage.
-function readFileAsBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onprogress = (e) => {
-      if (e.lengthComputable) {
-        const pct = Math.round((e.loaded / e.total) * 20); // 0-20%
-        setProgress(pct, `Leyendo video... ${pct * 5}%`);
-      }
-    };
-    reader.onload  = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('Error al leer el archivo de video.'));
-    reader.readAsDataURL(file);
-  });
+// ── Sube el video a Supabase Storage y devuelve la URL pública ──────────────
+// Nueva arquitectura: el video nunca pasa por la función serverless de Vercel
+// (límite 4.5MB). El cliente lo sube directo a Storage; la API solo recibe la URL.
+async function uploadVideoToStorage(file) {
+  if (!currentUser) throw new Error('Usuario no autenticado');
+  const ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
+  const fileName = `${currentUser.id}/${Date.now()}.${ext}`;
+
+  const { data, error } = await sb.storage
+    .from('videos')
+    .upload(fileName, file, {
+      contentType: file.type || 'video/mp4',
+      cacheControl: '3600',
+      upsert: false
+    });
+
+  if (error) throw new Error('Error subiendo a Supabase Storage: ' + error.message);
+
+  const { data: urlData } = sb.storage.from('videos').getPublicUrl(data.path);
+  return { path: data.path, publicUrl: urlData.publicUrl };
 }
 
 async function analyzeVideo() {
   hideVideoError();
-  if (!videoFile) {
-    showVideoError('Selecciona un video MP4 primero.');
-    return;
-  }
+  if (!videoFile) { showVideoError('Selecciona un video MP4 primero.'); return; }
+
   const camiseta = document.getElementById('video-camiseta').value.trim();
   if (!camiseta || isNaN(camiseta) || +camiseta < 1 || +camiseta > 99) {
     showVideoError('Ingresa un número de camiseta válido (1-99).');
     return;
   }
+  if (!currentUser) { showVideoError('Debes iniciar sesión para analizar videos.'); return; }
 
-  const btn = document.getElementById('analyze-btn');
+  const btn      = document.getElementById('analyze-btn');
   const progress = document.getElementById('video-progress');
-  btn.disabled = true;
+  btn.disabled   = true;
   progress.classList.add('active');
   document.getElementById('video-result').innerHTML = '';
-  setProgress(0, 'Leyendo video...');
+  setProgress(0, 'Conectando con Supabase Storage...');
 
-  // Progreso simulado durante el procesamiento servidor (sin feedback real)
-  let serverPct = 35;
+  let storagePath    = null;
+  let uploadInterval = null;
   let serverInterval = null;
 
-  const serverLabels = [
-    'Subiendo video al servidor...',
-    'Decodificando video con ffmpeg...',
-    'Extrayendo frames...',
-    'Analizando frames con IA...',
-    'Generando análisis táctico...'
-  ];
-
   try {
-    // ── 1. Leer video como base64 (FileReader) ──────────────────────────────
-    const videoBase64 = await readFileAsBase64(videoFile);
-    setProgress(22, 'Subiendo video al servidor...');
+    // ── FASE 1: Upload directo a Supabase Storage (evita límite 4.5MB de Vercel)
+    let uploadPct = 3;
+    uploadInterval = setInterval(() => {
+      uploadPct = Math.min(uploadPct + 1.2, 56);
+      setProgress(Math.round(uploadPct), `Subiendo video a Storage... ${Math.round((uploadPct / 56) * 100)}%`);
+    }, 600);
 
-    // ── 2. Iniciar progreso simulado mientras el servidor trabaja ───────────
+    const { path, publicUrl } = await uploadVideoToStorage(videoFile);
+    clearInterval(uploadInterval); uploadInterval = null;
+    storagePath = path;
+    setProgress(60, '✓ Video subido — iniciando análisis con IA...');
+
+    // ── FASE 2: La API descarga el video desde Storage, extrae frames, llama Claude
+    const svrLabels = [
+      'Descargando video en el servidor...',
+      'Extrayendo 8 frames con ffmpeg...',
+      'Enviando frames a Claude Vision...',
+      'Generando informe táctico...'
+    ];
+    let svrPct = 62;
     serverInterval = setInterval(() => {
-      serverPct = Math.min(serverPct + 3, 88);
-      const label = serverLabels[Math.min(
-        Math.floor((serverPct - 35) / 11),
-        serverLabels.length - 1
-      )];
-      setProgress(serverPct, label);
-    }, 1800);
+      svrPct = Math.min(svrPct + 2, 90);
+      const lbl = svrLabels[Math.min(Math.floor((svrPct - 62) / 8), svrLabels.length - 1)];
+      setProgress(svrPct, lbl);
+    }, 1500);
 
-    // ── 3. Enviar video base64 al servidor → ffmpeg → Claude Vision ─────────
     const res = await fetch('/api/analyze-video', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ videoBase64, numeroCamiseta: camiseta })
+      body: JSON.stringify({ videoUrl: publicUrl, numeroCamiseta: camiseta })
     });
 
-    clearInterval(serverInterval);
-    serverInterval = null;
+    clearInterval(serverInterval); serverInterval = null;
 
-    // Leer como texto primero para manejar respuestas no-JSON
-    // (ej: "Request Entity Too Large" de Vercel en HTTP 413)
+    // Parsear respuesta de forma segura (por si Vercel devuelve texto en vez de JSON)
     const responseText = await res.text();
     let data;
     try {
       data = JSON.parse(responseText);
     } catch {
-      console.error('[analyzeVideo] Respuesta no-JSON del servidor:', res.status, responseText.slice(0, 300));
-      throw new Error(`Error del servidor (HTTP ${res.status}): ${responseText.slice(0, 200)}`);
+      console.error('[analyzeVideo] respuesta no-JSON:', res.status, responseText.slice(0, 300));
+      throw new Error(`Respuesta inválida del servidor (HTTP ${res.status}): ${responseText.slice(0, 150)}`);
     }
     if (!res.ok || data.error) {
-      throw new Error(data.error || `Error del servidor (HTTP ${res.status})`);
+      throw new Error(data.error || `Error del servidor HTTP ${res.status}`);
     }
 
     setProgress(100, 'Análisis completado ✓');
 
-    // ── 4. Guardar en Supabase ──────────────────────────────────────────────
+    // ── Guardar en Supabase DB ──────────────────────────────────────────────
     if (currentUser) {
       await sb.from('analisis_video').insert({
         jugador_id: currentUser.id,
@@ -2933,20 +2937,25 @@ async function analyzeVideo() {
       });
     }
 
-    // ── 5. Mostrar resultado ────────────────────────────────────────────────
+    // ── Mostrar resultado ───────────────────────────────────────────────────
     setTimeout(() => {
       progress.classList.remove('active');
       renderVideoAnalysis(data.analisis);
       loadVideoHistory();
-    }, 500);
+    }, 600);
 
   } catch (err) {
-    if (serverInterval) { clearInterval(serverInterval); }
+    if (uploadInterval) clearInterval(uploadInterval);
+    if (serverInterval) clearInterval(serverInterval);
     progress.classList.remove('active');
-    showVideoError('Error al analizar: ' + err.message);
+    showVideoError('Error: ' + err.message);
     console.error('[analyzeVideo]', err);
   } finally {
     btn.disabled = false;
+    // Limpiar video de Storage (fire-and-forget, no bloquear UI)
+    if (storagePath) {
+      sb.storage.from('videos').remove([storagePath]).catch(() => {});
+    }
   }
 }
 

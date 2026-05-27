@@ -5,46 +5,37 @@ import os from 'os'
 import crypto from 'crypto'
 import ffmpegPath from 'ffmpeg-static'
 
-// ── Configuración del body parser ────────────────────────────────────────────
-// sizeLimit: video 50 MB → base64 ≈ 67 MB → margen con 75 MB
-// IMPORTANTE: este config es respetado por Vercel's Node.js builder
+// Body ahora es mínimo: solo { videoUrl, numeroCamiseta }
+// El video viaja directo de cliente a Supabase Storage — nunca por esta función
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '75mb'
+      sizeLimit: '1mb'
     }
   }
 }
 
-// ── Diagnóstico de arranque ──────────────────────────────────────────────────
-// Se ejecuta una vez al cargar el módulo (no por cada request)
-console.log('[analyze-video] MODULE LOAD — ffmpegPath:', ffmpegPath)
+// ── Diagnóstico de arranque del módulo ───────────────────────────────────────
+console.log('[analyze-video] MODULE LOAD')
+console.log('[analyze-video] ffmpegPath:', ffmpegPath)
 if (ffmpegPath) {
   const exists = fs.existsSync(ffmpegPath)
-  console.log('[analyze-video] ffmpeg binary exists:', exists)
+  console.log('[analyze-video] binary exists:', exists)
   if (exists) {
-    // Verificar que el binario es ejecutable corriendo ffmpeg -version
-    const vCheck = spawnSync(ffmpegPath, ['-version'], { encoding: 'utf8', timeout: 8000 })
-    const firstLine = (vCheck.stdout || vCheck.stderr || '').split('\n')[0]
-    console.log('[analyze-video] ffmpeg -version:', firstLine || '(sin output)')
-    if (vCheck.error) {
-      console.error('[analyze-video] ffmpeg -version ERROR:', vCheck.error.message)
-    }
+    const v = spawnSync(ffmpegPath, ['-version'], { encoding: 'utf8', timeout: 8000 })
+    console.log('[analyze-video] ffmpeg version:', (v.stdout || v.stderr || '').split('\n')[0])
+    if (v.error) console.error('[analyze-video] ffmpeg -version error:', v.error.message)
   }
 } else {
-  console.error('[analyze-video] CRÍTICO: ffmpeg-static devolvió null — binario no disponible para esta plataforma')
+  console.error('[analyze-video] CRÍTICO: ffmpeg-static devolvió null')
 }
 
-// ── Handler principal ────────────────────────────────────────────────────────
+// ── Handler ──────────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
-  // ── Log de cada request ────────────────────────────────────────────────────
   console.log('[analyze-video] REQUEST', {
     method: req.method,
-    contentType: req.headers['content-type'],
-    contentLength: req.headers['content-length'],
-    bodyIsObject: typeof req.body === 'object' && req.body !== null,
     bodyKeys: req.body ? Object.keys(req.body) : [],
-    videoBase64Len: req.body?.videoBase64?.length ?? 0,
+    videoUrl: req.body?.videoUrl?.slice(0, 80),
     numeroCamiseta: req.body?.numeroCamiseta
   })
 
@@ -52,110 +43,86 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  // ── Guardia: ffmpeg disponible ─────────────────────────────────────────────
-  if (!ffmpegPath) {
-    console.error('[analyze-video] ffmpegPath es null')
+  // ── Guardias ────────────────────────────────────────────────────────────────
+  if (!ffmpegPath || !fs.existsSync(ffmpegPath)) {
+    console.error('[analyze-video] ffmpeg no disponible:', ffmpegPath)
     return res.status(500).json({
-      error: 'ffmpeg no disponible en este entorno serverless. Verifica que ffmpeg-static está instalado.',
+      error: 'ffmpeg no disponible en el servidor. Verifica que ffmpeg-static está instalado.',
       debug: { ffmpegPath, platform: process.platform, arch: process.arch }
     })
   }
-  if (!fs.existsSync(ffmpegPath)) {
-    console.error('[analyze-video] binario ffmpeg no encontrado en:', ffmpegPath)
-    return res.status(500).json({
-      error: `Binario ffmpeg no encontrado: ${ffmpegPath}`,
-      debug: { ffmpegPath, platform: process.platform }
-    })
-  }
 
-  // ── Guardia: body ──────────────────────────────────────────────────────────
-  if (!req.body || typeof req.body !== 'object') {
-    console.error('[analyze-video] req.body inválido, tipo:', typeof req.body)
-    return res.status(400).json({
-      error: 'Body del request no recibido o no es JSON. Verifica Content-Type y sizeLimit.',
-      debug: { bodyType: typeof req.body, contentLength: req.headers['content-length'] }
-    })
-  }
+  const { videoUrl, numeroCamiseta } = req.body || {}
 
-  const { videoBase64, numeroCamiseta } = req.body
-
-  if (!videoBase64 || typeof videoBase64 !== 'string' || videoBase64.length < 100) {
-    console.error('[analyze-video] videoBase64 inválido, longitud:', videoBase64?.length ?? 0)
-    return res.status(400).json({
-      error: 'Video requerido. El campo videoBase64 está vacío o es inválido.',
-      debug: { videoBase64Length: videoBase64?.length ?? 0 }
-    })
+  if (!videoUrl || typeof videoUrl !== 'string') {
+    return res.status(400).json({ error: 'videoUrl requerida (URL pública de Supabase Storage)' })
   }
   if (!numeroCamiseta) {
-    return res.status(400).json({ error: 'Número de camiseta requerido' })
+    return res.status(400).json({ error: 'numeroCamiseta requerido' })
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
-    console.error('[analyze-video] ANTHROPIC_API_KEY no configurada')
-    return res.status(500).json({ error: 'ANTHROPIC_API_KEY no configurada en variables de entorno' })
+    return res.status(500).json({ error: 'ANTHROPIC_API_KEY no configurada' })
   }
 
-  const tmpId = crypto.randomBytes(8).toString('hex')
+  const tmpId  = crypto.randomBytes(8).toString('hex')
   const tmpDir = path.join(os.tmpdir(), `fiq-${tmpId}`)
 
   try {
     fs.mkdirSync(tmpDir, { recursive: true })
-    console.log('[analyze-video] tmpDir creado:', tmpDir)
 
-    // ── PASO 1: Decodificar base64 → Buffer → disco ──────────────────────────
+    // ── PASO 1: Descargar video desde Supabase Storage ───────────────────────
+    console.log('[analyze-video] PASO 1 — descargando desde:', videoUrl.slice(0, 100))
     let videoBuffer
     try {
-      const base64Data = videoBase64.replace(/^data:video\/[^;]+;base64,/, '')
-      videoBuffer = Buffer.from(base64Data, 'base64')
-      const sizeMB = (videoBuffer.length / 1024 / 1024).toFixed(1)
-      console.log(`[analyze-video] PASO 1 OK — video decodificado: ${sizeMB} MB`)
+      const ctrl = new AbortController()
+      const timer = setTimeout(() => ctrl.abort(), 55000)
+      const videoRes = await fetch(videoUrl, { signal: ctrl.signal })
+      clearTimeout(timer)
+
+      if (!videoRes.ok) {
+        throw new Error(`HTTP ${videoRes.status} al descargar el video desde Storage`)
+      }
+      videoBuffer = Buffer.from(await videoRes.arrayBuffer())
+      console.log(`[analyze-video] PASO 1 OK — ${(videoBuffer.length / 1024 / 1024).toFixed(1)} MB descargados`)
     } catch (e) {
-      console.error('[analyze-video] PASO 1 FAIL — error decodificando base64:', e.message)
-      throw new Error('Error al decodificar el video base64: ' + e.message)
+      console.error('[analyze-video] PASO 1 FAIL:', e.message)
+      throw new Error('Error descargando video desde Supabase Storage: ' + e.message)
     }
 
     const videoPath = path.join(tmpDir, 'input.mp4')
-    try {
-      fs.writeFileSync(videoPath, videoBuffer)
-      const stat = fs.statSync(videoPath)
-      console.log(`[analyze-video] PASO 1 OK — archivo guardado: ${(stat.size / 1024 / 1024).toFixed(1)} MB en ${videoPath}`)
-    } catch (e) {
-      console.error('[analyze-video] PASO 1 FAIL — error escribiendo archivo:', e.message)
-      throw new Error('Error al guardar el video en disco: ' + e.message)
-    }
+    fs.writeFileSync(videoPath, videoBuffer)
 
-    // ── PASO 2: Obtener duración con ffmpeg ───────────────────────────────────
+    // ── PASO 2: Obtener duración ──────────────────────────────────────────────
     let duration
     try {
       duration = getVideoDuration(videoPath)
       console.log(`[analyze-video] PASO 2 OK — duración: ${duration.toFixed(2)}s`)
     } catch (e) {
-      console.error('[analyze-video] PASO 2 FAIL — getVideoDuration:', e.message)
+      console.error('[analyze-video] PASO 2 FAIL:', e.message)
       throw e
     }
 
-    // ── PASO 3: Extraer frames con ffmpeg ─────────────────────────────────────
+    // ── PASO 3: Extraer 8 frames con ffmpeg ───────────────────────────────────
     const NUM_FRAMES = 8
     try {
       extractFrames(videoPath, tmpDir, NUM_FRAMES, duration)
-      console.log('[analyze-video] PASO 3 OK — frames extraídos')
+      console.log('[analyze-video] PASO 3 OK')
     } catch (e) {
-      console.error('[analyze-video] PASO 3 FAIL — extractFrames:', e.message)
+      console.error('[analyze-video] PASO 3 FAIL:', e.message)
       throw e
     }
 
-    // ── PASO 4: Leer JPEGs del disco ──────────────────────────────────────────
+    // ── PASO 4: Leer JPEGs como base64 ───────────────────────────────────────
     let imageBlocks
     try {
       const frameFiles = fs.readdirSync(tmpDir)
         .filter(f => /^frame_\d+\.jpg$/.test(f))
         .sort()
-      console.log(`[analyze-video] PASO 4 — archivos en tmpDir:`, frameFiles)
+      console.log(`[analyze-video] PASO 4 — frames en disco:`, frameFiles)
 
-      if (frameFiles.length === 0) {
-        throw new Error('ffmpeg no generó ningún frame JPEG en ' + tmpDir)
-      }
+      if (frameFiles.length === 0) throw new Error('ffmpeg no generó frames')
 
       imageBlocks = frameFiles.slice(0, NUM_FRAMES).map(fname => ({
         type: 'image',
@@ -165,14 +132,14 @@ export default async function handler(req, res) {
           data: fs.readFileSync(path.join(tmpDir, fname)).toString('base64')
         }
       }))
-      console.log(`[analyze-video] PASO 4 OK — ${imageBlocks.length} frames listos para Claude`)
+      console.log(`[analyze-video] PASO 4 OK — ${imageBlocks.length} frames listos`)
     } catch (e) {
       console.error('[analyze-video] PASO 4 FAIL:', e.message)
       throw e
     }
 
-    // ── PASO 5: Llamar a Claude Vision ────────────────────────────────────────
-    console.log('[analyze-video] PASO 5 — llamando Claude Vision con', imageBlocks.length, 'frames')
+    // ── PASO 5: Claude Vision ─────────────────────────────────────────────────
+    console.log('[analyze-video] PASO 5 — llamando Claude con', imageBlocks.length, 'frames')
     let analisis
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -202,7 +169,7 @@ DEVUELVE ÚNICAMENTE JSON VÁLIDO sin markdown.`,
 Devuelve EXCLUSIVAMENTE JSON válido sin markdown:
 {
   "jugador": "Camiseta #${numeroCamiseta}",
-  "resumen": "síntesis ejecutiva en 2-3 frases del rendimiento general",
+  "resumen": "síntesis ejecutiva en 2-3 frases",
   "fortalezas": ["fortaleza concreta 1", "fortaleza 2", "fortaleza 3"],
   "areas_mejora": ["área concreta 1", "área 2", "área 3"],
   "ejercicios": [
@@ -218,24 +185,20 @@ Devuelve EXCLUSIVAMENTE JSON válido sin markdown:
       })
 
       if (!response.ok) {
-        const errBody = await response.text()
-        console.error('[analyze-video] PASO 5 FAIL — Anthropic HTTP', response.status, errBody.slice(0, 200))
-        throw new Error(`Anthropic API error ${response.status}: ${errBody.slice(0, 150)}`)
+        const errText = await response.text()
+        console.error('[analyze-video] PASO 5 Anthropic error:', response.status, errText.slice(0, 200))
+        throw new Error(`Anthropic API error ${response.status}: ${errText.slice(0, 150)}`)
       }
 
       const claudeData = await response.json()
       const raw = (claudeData.content?.[0]?.text || '{}').trim()
-      console.log('[analyze-video] PASO 5 — raw Claude response (100 chars):', raw.slice(0, 100))
+      console.log('[analyze-video] PASO 5 raw (80 chars):', raw.slice(0, 80))
 
       const jsonStr = raw
-        .replace(/^```json\s*/i, '')
-        .replace(/^```\s*/i, '')
-        .replace(/```\s*$/i, '')
-        .trim()
+        .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim()
 
       analisis = JSON.parse(jsonStr)
-      console.log('[analyze-video] PASO 5 OK — análisis generado, jugador:', analisis.jugador)
-
+      console.log('[analyze-video] PASO 5 OK — jugador:', analisis.jugador)
     } catch (e) {
       console.error('[analyze-video] PASO 5 FAIL:', e.message)
       throw e
@@ -254,27 +217,16 @@ Devuelve EXCLUSIVAMENTE JSON válido sin markdown:
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 function getVideoDuration(videoPath) {
-  const result = spawnSync(ffmpegPath, ['-i', videoPath], {
-    encoding: 'utf8',
-    timeout: 15000
-  })
-  // ffmpeg siempre retorna exit code 1 cuando no hay output definido
-  // La información de duración siempre va a stderr
-  const output = result.stderr || ''
-  console.log('[analyze-video] ffmpeg probe stderr (200 chars):', output.slice(0, 200))
-
-  const match = output.match(/Duration:\s*(\d+):(\d+):(\d+\.?\d*)/)
-  if (!match) {
-    console.error('[analyze-video] Duration no encontrado en stderr. spawnSync error:', result.error?.message)
-    throw new Error('ffmpeg no pudo leer la duración del video. Verifica que el archivo sea MP4 válido.')
-  }
-  return parseInt(match[1]) * 3600 + parseInt(match[2]) * 60 + parseFloat(match[3])
+  const r = spawnSync(ffmpegPath, ['-i', videoPath], { encoding: 'utf8', timeout: 15000 })
+  const out = r.stderr || ''
+  console.log('[analyze-video] ffmpeg probe stderr (150):', out.slice(0, 150))
+  const m = out.match(/Duration:\s*(\d+):(\d+):(\d+\.?\d*)/)
+  if (!m) throw new Error('ffmpeg no pudo leer la duración — verifica que el archivo sea un MP4 válido')
+  return parseInt(m[1]) * 3600 + parseInt(m[2]) * 60 + parseFloat(m[3])
 }
 
 function extractFrames(videoPath, outputDir, numFrames, duration) {
-  const fps = (numFrames / duration).toFixed(8)
-  console.log(`[analyze-video] extractFrames — fps=${fps}, duration=${duration.toFixed(2)}s, output=${outputDir}`)
-
+  const fps  = (numFrames / duration).toFixed(8)
   const args = [
     '-i', videoPath,
     '-vf', `fps=${fps},scale=960:-2:flags=fast_bilinear`,
@@ -283,27 +235,16 @@ function extractFrames(videoPath, outputDir, numFrames, duration) {
     '-f', 'image2',
     path.join(outputDir, 'frame_%03d.jpg')
   ]
-  console.log('[analyze-video] ffmpeg args:', args.join(' '))
+  console.log('[analyze-video] ffmpeg extractFrames args:', args.join(' '))
 
-  const result = spawnSync(ffmpegPath, args, {
-    timeout: 120000,
-    encoding: 'utf8'
-  })
-
-  console.log('[analyze-video] ffmpeg extractFrames status:', result.status)
-  if (result.error) {
-    console.error('[analyze-video] ffmpeg extractFrames spawnSync error:', result.error.message)
-    throw result.error
-  }
-  if (result.stderr) {
-    console.log('[analyze-video] ffmpeg extractFrames stderr (last 300):', result.stderr.slice(-300))
-  }
+  const r = spawnSync(ffmpegPath, args, { timeout: 120000, encoding: 'utf8' })
+  console.log('[analyze-video] ffmpeg exit status:', r.status)
+  if (r.error) throw r.error
+  if (r.stderr) console.log('[analyze-video] ffmpeg stderr (last 300):', r.stderr.slice(-300))
 
   const created = fs.readdirSync(outputDir).filter(f => /^frame_/.test(f))
-  console.log('[analyze-video] frames creados:', created.length, created)
-
   if (created.length === 0) {
-    const lastStderr = (result.stderr || '').split('\n').slice(-8).join('\n')
-    throw new Error(`ffmpeg no extrajo frames (exit ${result.status}).\nÚltimas líneas: ${lastStderr}`)
+    throw new Error(`ffmpeg no extrajo frames (exit ${r.status}). Stderr: ${(r.stderr || '').slice(-200)}`)
   }
+  console.log('[analyze-video] frames creados:', created.length)
 }
