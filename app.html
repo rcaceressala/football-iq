@@ -177,6 +177,186 @@
     display: none;
   }
 
+  /* ===== LANDING ===== */
+  #landing-screen {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 24px 16px;
+  }
+
+  .landing-content {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+  }
+
+  .landing-logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 56px;
+    letter-spacing: 4px;
+    color: var(--t);
+    margin-bottom: 12px;
+    line-height: 1;
+  }
+
+  .landing-logo span { color: var(--green); }
+
+  .landing-tagline {
+    font-size: 16px;
+    color: var(--t2);
+    margin-bottom: 44px;
+    line-height: 1.5;
+  }
+
+  .landing-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 40px;
+  }
+
+  .feature-card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 18px 8px 16px;
+    transition: border-color .2s;
+  }
+
+  .feature-card:hover { border-color: var(--green-mid); }
+
+  .feature-icon { font-size: 26px; margin-bottom: 8px; }
+
+  .feature-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .5px;
+    color: var(--t);
+    margin-bottom: 4px;
+  }
+
+  .feature-desc {
+    font-size: 10px;
+    color: var(--t3);
+    line-height: 1.4;
+  }
+
+  .landing-cta-main {
+    width: 100%;
+    background: var(--green);
+    color: #080a0f;
+    border: none;
+    border-radius: 10px;
+    padding: 17px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity .2s, transform .1s;
+    margin-bottom: 12px;
+    min-height: 56px;
+    display: block;
+  }
+
+  .landing-cta-main:hover { opacity: .9; }
+  .landing-cta-main:active { transform: scale(.98); }
+
+  .landing-cta-sec {
+    width: 100%;
+    background: transparent;
+    color: var(--t2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 15px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all .2s;
+    min-height: 52px;
+    display: block;
+  }
+
+  .landing-cta-sec:hover { border-color: var(--t2); color: var(--t); }
+
+  /* ===== AUTH TABS ===== */
+  .auth-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 14px 12px;
+    background: transparent;
+    border: none;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--t3);
+    cursor: pointer;
+    transition: color .2s;
+    position: relative;
+  }
+
+  .auth-tab::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0; right: 0;
+    height: 2px;
+    background: var(--green);
+    opacity: 0;
+    transition: opacity .2s;
+  }
+
+  .auth-tab.active { color: var(--t); }
+  .auth-tab.active::after { opacity: 1; }
+
+  .auth-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    color: var(--t3);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 18px;
+    transition: color .2s;
+  }
+
+  .auth-back:hover { color: var(--t2); }
+
+  .login-success {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    border-radius: 7px;
+    font-size: 13px;
+    color: var(--green);
+    display: none;
+    line-height: 1.5;
+  }
+
   /* ===== APP ===== */
   #app-screen { display: none; }
 
@@ -1154,26 +1334,64 @@
 </head>
 <body>
 
+<!-- LANDING -->
+<div id="landing-screen">
+  <div class="login-bg"></div>
+  <div class="login-grid"></div>
+  <div class="landing-content">
+    <div class="landing-logo">FOOTBALL <span>IQ</span></div>
+    <div class="landing-tagline">Tu coach personal de fútbol con IA</div>
+    <div class="landing-features">
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <div class="feature-label">Coach IA</div>
+        <div class="feature-desc">Análisis táctico personalizado</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📋</div>
+        <div class="feature-label">Plan semanal</div>
+        <div class="feature-desc">Entrenamiento basado en tus errores</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">👥</div>
+        <div class="feature-label">Modo equipo</div>
+        <div class="feature-desc">Compite y mejora con tu equipo</div>
+      </div>
+    </div>
+    <button class="landing-cta-main" onclick="showRegister()">Comenzar gratis</button>
+    <button class="landing-cta-sec" onclick="showLogin()">Ya tengo cuenta</button>
+  </div>
+</div>
+
 <!-- LOGIN -->
-<div id="login-screen">
+<div id="login-screen" style="display:none">
   <div class="login-bg"></div>
   <div class="login-grid"></div>
   <div class="login-card">
     <div class="login-header">
       <div class="login-logo">FOOTBALL <span>IQ</span></div>
-      <div class="login-tagline">Coach de alto rendimiento</div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="setAuthMode('login')">Iniciar sesion</button>
+      <button class="auth-tab" id="tab-register" onclick="setAuthMode('register')">Crear cuenta</button>
     </div>
     <div class="login-body">
+      <button class="auth-back" onclick="showLanding()">← Volver al inicio</button>
       <div class="field-wrap">
         <label class="field-label">Email</label>
         <input id="login-email" class="login-input" type="email" placeholder="tu@email.com" autocomplete="email">
       </div>
       <div class="field-wrap">
-        <label class="field-label">Contrasena</label>
+        <label class="field-label">Contraseña</label>
         <input id="login-password" class="login-input" type="password" placeholder="••••••••" autocomplete="current-password">
       </div>
-      <button id="login-btn" class="login-btn" onclick="doLogin()">Entrar al campo</button>
+      <div class="field-wrap" id="field-confirm" style="display:none">
+        <label class="field-label">Confirmar contraseña</label>
+        <input id="login-confirm" class="login-input" type="password" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <button id="login-btn" class="login-btn" onclick="doAuth()">Entrar al campo</button>
       <div id="login-error" class="login-error"></div>
+      <div id="login-success" class="login-success"></div>
     </div>
   </div>
 </div>
@@ -1471,26 +1689,67 @@ if ('serviceWorker' in navigator) {
 }
 
 // ===== INIT =====
+let authMode = 'login';
+
 (async () => {
+  document.getElementById('welcome-modal').classList.remove('open');
   const { data: { session } } = await sb.auth.getSession();
   if (session) enterApp(session.user);
-  else document.getElementById('welcome-modal').classList.remove('open');
+  // else: landing screen visible by default
 })();
 
+// ===== NAVEGACION ENTRE PANTALLAS =====
+function showLanding() {
+  document.getElementById('landing-screen').style.display = 'flex';
+  document.getElementById('login-screen').style.display = 'none';
+}
+
+function showLogin() {
+  setAuthMode('login');
+  document.getElementById('landing-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  setTimeout(() => document.getElementById('login-email').focus(), 100);
+}
+
+function showRegister() {
+  setAuthMode('register');
+  document.getElementById('landing-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  setTimeout(() => document.getElementById('login-email').focus(), 100);
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  const isReg = mode === 'register';
+  document.getElementById('tab-login').classList.toggle('active', !isReg);
+  document.getElementById('tab-register').classList.toggle('active', isReg);
+  document.getElementById('field-confirm').style.display = isReg ? 'block' : 'none';
+  document.getElementById('login-btn').textContent = isReg ? 'Crear cuenta' : 'Entrar al campo';
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('login-success').style.display = 'none';
+}
+
 // ===== AUTH =====
+function doAuth() {
+  if (authMode === 'register') doSignUp();
+  else doLogin();
+}
+
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
   const btn = document.getElementById('login-btn');
   const errEl = document.getElementById('login-error');
+  const sucEl = document.getElementById('login-success');
   errEl.style.display = 'none';
+  sucEl.style.display = 'none';
   btn.disabled = true;
   btn.textContent = 'Entrando...';
 
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
   if (error) {
-    errEl.textContent = 'Email o contrasena incorrectos.';
+    errEl.textContent = 'Email o contraseña incorrectos.';
     errEl.style.display = 'block';
     btn.disabled = false;
     btn.textContent = 'Entrar al campo';
@@ -1499,17 +1758,67 @@ async function doLogin() {
   enterApp(data.user);
 }
 
+async function doSignUp() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const confirm = document.getElementById('login-confirm').value;
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  const sucEl = document.getElementById('login-success');
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  if (!email || !password) {
+    errEl.textContent = 'Completa email y contraseña.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (password.length < 6) {
+    errEl.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (password !== confirm) {
+    errEl.textContent = 'Las contraseñas no coinciden.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Creando cuenta...';
+
+  const { data, error } = await sb.auth.signUp({ email, password });
+
+  btn.disabled = false;
+  btn.textContent = 'Crear cuenta';
+
+  if (error) {
+    errEl.textContent = error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  if (data.session) {
+    enterApp(data.user);
+  } else {
+    sucEl.textContent = '✓ Cuenta creada. Revisa tu email para confirmar tu cuenta y luego inicia sesion.';
+    sucEl.style.display = 'block';
+  }
+}
+
 async function doLogout() {
   await sb.auth.signOut();
   currentUser = null;
   playerProfile = null;
   chatHistory = [];
   document.getElementById('app-screen').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('landing-screen').style.display = 'flex';
 }
 
 async function enterApp(user) {
   currentUser = user;
+  document.getElementById('landing-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-screen').style.display = 'block';
   document.getElementById('user-display').textContent = user.email.split('@')[0];
@@ -1520,7 +1829,11 @@ async function enterApp(user) {
 }
 
 document.getElementById('login-password').addEventListener('keydown', e => {
-  if (e.key === 'Enter') doLogin();
+  if (e.key === 'Enter') doAuth();
+});
+
+document.getElementById('login-confirm').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doAuth();
 });
 
 // ===== TABS =====
