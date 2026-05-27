@@ -2842,6 +2842,8 @@ async function uploadVideoToStorage(file) {
   const ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
   const fileName = `${currentUser.id}/${Date.now()}.${ext}`;
 
+  console.log('[uploadVideoToStorage] iniciando upload — fileName:', fileName, 'size:', file.size, 'type:', file.type);
+
   const { data, error } = await sb.storage
     .from('videos')
     .upload(fileName, file, {
@@ -2850,9 +2852,15 @@ async function uploadVideoToStorage(file) {
       upsert: false
     });
 
-  if (error) throw new Error('Error subiendo a Supabase Storage: ' + error.message);
+  console.log('[uploadVideoToStorage] resultado sb.storage.upload() →', { data, error });
+
+  if (error) {
+    console.error('[uploadVideoToStorage] ERROR:', error);
+    throw new Error('Storage upload falló: ' + (error.message || JSON.stringify(error)));
+  }
 
   const { data: urlData } = sb.storage.from('videos').getPublicUrl(data.path);
+  console.log('[uploadVideoToStorage] publicUrl generada:', urlData.publicUrl);
   return { path: data.path, publicUrl: urlData.publicUrl };
 }
 
@@ -2886,9 +2894,20 @@ async function analyzeVideo() {
       setProgress(Math.round(uploadPct), `Subiendo video a Storage... ${Math.round((uploadPct / 56) * 100)}%`);
     }, 600);
 
-    const { path, publicUrl } = await uploadVideoToStorage(videoFile);
+    let path, publicUrl;
+    try {
+      ({ path, publicUrl } = await uploadVideoToStorage(videoFile));
+    } catch (uploadErr) {
+      clearInterval(uploadInterval); uploadInterval = null;
+      console.error('[analyzeVideo] upload a Storage falló:', uploadErr);
+      progress.classList.remove('active');
+      showVideoError('❌ Error subiendo el video a Storage: ' + uploadErr.message);
+      btn.disabled = false;
+      return;
+    }
     clearInterval(uploadInterval); uploadInterval = null;
     storagePath = path;
+    console.log('[analyzeVideo] upload OK — publicUrl:', publicUrl);
     setProgress(60, '✓ Video subido — iniciando análisis con IA...');
 
     // ── FASE 2: La API descarga el video desde Storage, extrae frames, llama Claude
