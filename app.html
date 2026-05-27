@@ -2839,6 +2839,15 @@ function setProgress(pct, label) {
 // para evitar el 400 que devuelve el SDK en este entorno.
 async function uploadVideoToStorage(file) {
   if (!currentUser) throw new Error('Usuario no autenticado');
+
+  // Obtener el JWT del usuario autenticado (no la anon key)
+  const { data: sessionData, error: sessionError } = await sb.auth.getSession();
+  if (sessionError || !sessionData.session) {
+    throw new Error('No hay sesión activa: ' + (sessionError?.message || 'session null'));
+  }
+  const token = sessionData.session.access_token;
+  console.log('[uploadVideoToStorage] token obtenido (primeros 20 chars):', token.slice(0, 20));
+
   const ext  = (file.name.split('.').pop() || 'mp4').toLowerCase();
   const path = `${currentUser.id}/${Date.now()}.${ext}`;
   const uploadUrl  = `${SUPABASE_URL}/storage/v1/object/videos/${path}`;
@@ -2850,7 +2859,7 @@ async function uploadVideoToStorage(file) {
   const res = await fetch(uploadUrl, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${SUPABASE_ANON}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': file.type || 'video/mp4',
       'x-upsert': 'false'
     },
