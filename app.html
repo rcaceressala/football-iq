@@ -2834,54 +2834,110 @@ function setProgress(pct, label) {
   document.getElementById('progress-label').textContent = label;
 }
 
-// Extrae N frames del video usando HTML5 Canvas (no requiere ffmpeg en servidor)
+// ── Captura UN frame en el tiempo indicado ──────────────────────────────────
+// Crea un listener 'seeked' propio (se limpia solo) + doble rAF para que el
+// decodificador termine de renderizar el frame antes del drawImage.
+function captureVideoFrame(video, canvas, ctx, time) {
+  return new Promise((resolve, reject) => {
+    const TIMEOUT_MS = 8000;
+
+    const timer = setTimeout(() => {
+      video.removeEventListener('seeked', onSeeked);
+      reject(new Error(`Timeout capturando frame en t=${time.toFixed(2)}s`));
+    }, TIMEOUT_MS);
+
+    function onSeeked() {
+      clearTimeout(timer);
+      video.removeEventListener('seeked', onSeeked);
+
+      // Doble rAF: primer tick programa, segundo tick garantiza que el
+      // compositor ya pintó el nuevo frame de video en el decodificador.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          try {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', 0.72));
+          } catch (err) {
+            reject(err);
+          }
+        });
+      });
+    }
+
+    video.addEventListener('seeked', onSeeked);
+    video.currentTime = time;
+  });
+}
+
+// ── Extrae N frames distribuidos uniformemente ───────────────────────────────
+// Usa 'loadeddata' (no 'loadedmetadata') para garantizar que el primer frame
+// ya está decodificado y videoWidth/Height son correctos.
+// Procesa cada frame secuencialmente con await para evitar solapamiento.
 function extractVideoFrames(file, numFrames = 8) {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const frames = [];
-    let idx = 0;
-    let times = [];
-
-    video.muted = true;
-    video.preload = 'metadata';
+    video.muted      = true;
+    video.preload    = 'auto';   // carga datos, no solo metadatos
     video.playsInline = true;
 
-    video.addEventListener('error', () => reject(new Error('No se pudo cargar el video.')));
+    const url = URL.createObjectURL(file);
 
-    video.addEventListener('loadedmetadata', () => {
+    video.addEventListener('error', () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Error al cargar el video. Verifica que el archivo sea válido.'));
+    });
+
+    video.addEventListener('loadeddata', async () => {
+      // 'loadeddata' garantiza que las dimensiones y el primer frame están listos
+      const w = video.videoWidth;
+      const h = video.videoHeight;
       const dur = video.duration;
+
+      if (!w || !h) {
+        URL.revokeObjectURL(url);
+        reject(new Error('No se pudieron obtener las dimensiones del video.'));
+        return;
+      }
       if (!dur || !isFinite(dur)) {
+        URL.revokeObjectURL(url);
         reject(new Error('No se pudo leer la duración del video.'));
         return;
       }
-      // Escala máxima 960px ancho para reducir payload
-      const scale = Math.min(1, 960 / (video.videoWidth || 960));
-      canvas.width  = Math.floor((video.videoWidth  || 960) * scale);
-      canvas.height = Math.floor((video.videoHeight || 540) * scale);
 
-      // Distribuye los frames uniformemente (evita inicio/fin exactos)
-      times = Array.from({ length: numFrames }, (_, i) =>
+      // Canvas se crea aquí, cuando las dimensiones ya son definitivas
+      const canvas = document.createElement('canvas');
+      const ctx    = canvas.getContext('2d');
+      const scale  = Math.min(1, 960 / w);
+      canvas.width  = Math.floor(w * scale);
+      canvas.height = Math.floor(h * scale);
+
+      // Tiempos uniformes evitando los extremos (inicio/fin suelen tener frames vacíos)
+      const times = Array.from({ length: numFrames }, (_, i) =>
         (dur / (numFrames + 1)) * (i + 1)
       );
-      video.currentTime = times[0];
-    });
 
-    video.addEventListener('seeked', () => {
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      frames.push(canvas.toDataURL('image/jpeg', 0.72));
-      setProgress(Math.round(((idx + 1) / numFrames) * 50), `Extrayendo frame ${idx + 1} de ${numFrames}...`);
-      idx++;
-      if (idx < numFrames) {
-        video.currentTime = times[idx];
-      } else {
-        URL.revokeObjectURL(video.src);
+      const frames = [];
+      try {
+        for (let i = 0; i < numFrames; i++) {
+          // Procesamiento secuencial: espera a que termine antes del siguiente
+          const frame = await captureVideoFrame(video, canvas, ctx, times[i]);
+          frames.push(frame);
+          setProgress(
+            Math.round(((i + 1) / numFrames) * 50),
+            `Extrayendo frame ${i + 1} de ${numFrames}...`
+          );
+        }
+        URL.revokeObjectURL(url);
         resolve(frames);
+      } catch (err) {
+        URL.revokeObjectURL(url);
+        reject(err);
       }
     });
 
-    video.src = URL.createObjectURL(file);
+    video.src = url;
+    video.load(); // forzar carga aunque el navegador sea conservador
   });
 }
 
