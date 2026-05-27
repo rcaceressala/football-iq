@@ -2813,9 +2813,50 @@ function renderTeam(container, equipo, miembros, erroresPorJugador) {
       <div class="chart-wrap"><canvas id="chart-team"></canvas></div>
     </div>
     <div class="teammates-list">${memberRows}</div>
+    <div id="team-analysis-section"></div>
   `;
 
   renderTeamChart(miembros, erroresPorJugador);
+  loadTeamAnalysis(miembros);
+}
+
+async function loadTeamAnalysis(miembros) {
+  const section = document.getElementById('team-analysis-section');
+  if (!section) return;
+  const ids = (miembros || []).map(m => m.id);
+  if (!ids.length) return;
+
+  const { data: analisis } = await sb.from('analisis_video')
+    .select('id, jugador_id, numero_camiseta, analisis, created_at')
+    .in('jugador_id', ids)
+    .eq('publico_equipo', true)
+    .order('created_at', { ascending: false })
+    .limit(10);
+
+  if (!analisis || analisis.length === 0) {
+    section.innerHTML = '';
+    return;
+  }
+
+  // Mapa id → nombre para mostrar quién subió el análisis
+  const nombreMap = {};
+  miembros.forEach(m => { nombreMap[m.id] = m.nombre || 'Jugador'; });
+
+  section.innerHTML = `
+    <div style="font-size:10px;font-family:'DM Mono',monospace;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin:20px 0 12px">
+      🎬 Análisis del equipo
+    </div>
+    ${analisis.map(r => `
+      <div class="video-hist-item" onclick='renderVideoAnalysis(${JSON.stringify(r.analisis).replace(/'/g, "&#39;")})'>
+        <div class="video-hist-title">
+          ${nombreMap[r.jugador_id]} — Camiseta #${r.numero_camiseta}
+          ${r.jugador_id === currentUser?.id ? '<span style="font-size:10px;color:var(--green);margin-left:6px">(tú)</span>' : ''}
+        </div>
+        <div class="video-hist-meta">${new Date(r.created_at).toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' })}</div>
+        <div class="video-hist-meta" style="margin-top:3px;color:var(--t2)">${r.analisis?.resumen?.substring(0, 70) || ''}...</div>
+      </div>
+    `).join('')}
+  `;
 }
 
 function renderTeamChart(miembros, erroresPorJugador) {
@@ -3153,7 +3194,8 @@ async function analyzeVideo() {
       await sb.from('analisis_video').insert({
         jugador_id: currentUser.id,
         numero_camiseta: camiseta,
-        analisis: data.analisis
+        analisis: data.analisis,
+        publico_equipo: true
       });
       checkMilestones();
     }
