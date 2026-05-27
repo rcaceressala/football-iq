@@ -2834,34 +2834,38 @@ function setProgress(pct, label) {
   document.getElementById('progress-label').textContent = label;
 }
 
-// ── Sube el video a Supabase Storage y devuelve la URL pública ──────────────
-// Nueva arquitectura: el video nunca pasa por la función serverless de Vercel
-// (límite 4.5MB). El cliente lo sube directo a Storage; la API solo recibe la URL.
+// ── Sube el video a Supabase Storage via fetch directo a la REST API ─────────
+// Usa fetch() nativo con Authorization: Bearer en vez de sb.storage.upload()
+// para evitar el 400 que devuelve el SDK en este entorno.
 async function uploadVideoToStorage(file) {
   if (!currentUser) throw new Error('Usuario no autenticado');
-  const ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
-  const fileName = `${currentUser.id}/${Date.now()}.${ext}`;
+  const ext  = (file.name.split('.').pop() || 'mp4').toLowerCase();
+  const path = `${currentUser.id}/${Date.now()}.${ext}`;
+  const uploadUrl  = `${SUPABASE_URL}/storage/v1/object/videos/${path}`;
+  const publicUrl  = `${SUPABASE_URL}/storage/v1/object/public/videos/${path}`;
 
-  console.log('[uploadVideoToStorage] iniciando upload — fileName:', fileName, 'size:', file.size, 'type:', file.type);
+  console.log('[uploadVideoToStorage] fetch REST API — url:', uploadUrl);
+  console.log('[uploadVideoToStorage] file:', file.name, file.size, file.type);
 
-  const { data, error } = await sb.storage
-    .from('videos')
-    .upload(fileName, file, {
-      contentType: file.type || 'video/mp4',
-      cacheControl: '3600',
-      upsert: false
-    });
+  const res = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SUPABASE_ANON}`,
+      'Content-Type': file.type || 'video/mp4',
+      'x-upsert': 'false'
+    },
+    body: file
+  });
 
-  console.log('[uploadVideoToStorage] resultado sb.storage.upload() →', { data, error });
+  const resText = await res.text();
+  console.log('[uploadVideoToStorage] HTTP', res.status, '— respuesta:', resText);
 
-  if (error) {
-    console.error('[uploadVideoToStorage] ERROR:', error);
-    throw new Error('Storage upload falló: ' + (error.message || JSON.stringify(error)));
+  if (!res.ok) {
+    throw new Error(`Storage REST ${res.status}: ${resText}`);
   }
 
-  const { data: urlData } = sb.storage.from('videos').getPublicUrl(data.path);
-  console.log('[uploadVideoToStorage] publicUrl generada:', urlData.publicUrl);
-  return { path: data.path, publicUrl: urlData.publicUrl };
+  console.log('[uploadVideoToStorage] publicUrl:', publicUrl);
+  return { path, publicUrl };
 }
 
 async function analyzeVideo() {
