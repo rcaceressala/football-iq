@@ -1455,6 +1455,42 @@
 
     .team-actions { grid-template-columns: 1fr 1fr; }
   }
+
+  /* ===== CELEBRATION TOAST ===== */
+  .celebration-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-160px);
+    z-index: 600;
+    background: var(--bg2);
+    border: 1px solid var(--green);
+    border-radius: 18px;
+    padding: 20px 28px 18px;
+    text-align: center;
+    min-width: 270px;
+    max-width: 360px;
+    box-shadow: 0 8px 48px rgba(0,232,122,.25);
+    transition: transform .45s cubic-bezier(.34,1.56,.64,1);
+    pointer-events: none;
+  }
+  .celebration-toast.show { transform: translateX(-50%) translateY(0); }
+  .cel-emoji { font-size: 38px; margin-bottom: 8px; }
+  .cel-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 20px; color: var(--green); letter-spacing: .5px; margin-bottom: 5px; }
+  .cel-msg   { font-size: 13px; color: var(--t2); line-height: 1.45; }
+
+  /* ===== COMPARATIVA MENSUAL ===== */
+  .comp-header { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--t3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+  .comp-grid   { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+  .comp-card   { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 14px 12px; }
+  .comp-label  { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--t3); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+  .comp-nums   { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .comp-current { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 700; color: var(--t); line-height: 1; }
+  .comp-prev   { font-size: 11px; color: var(--t3); font-family: 'DM Mono', monospace; }
+  .comp-delta  { font-size: 11px; font-family: 'DM Mono', monospace; font-weight: 500; }
+  .comp-delta.better { color: var(--green); }
+  .comp-delta.worse  { color: var(--red); }
+  .comp-delta.same   { color: var(--t3); }
 </style>
 </head>
 <body>
@@ -1674,6 +1710,10 @@
           <div class="chart-title">Sesiones por semana (ultimas 6)</div>
           <div class="chart-wrap"><canvas id="chart-sesiones"></canvas></div>
         </div>
+        <div class="chart-section" id="comparativa-section" style="display:none">
+          <div class="chart-title">Este mes vs mes anterior</div>
+          <div id="comparativa-content"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1818,6 +1858,13 @@
         <div class="empty-state">Cargando...</div>
       </div>
     </div>
+  </div>
+
+  <!-- Celebration toast -->
+  <div id="celebration-toast" class="celebration-toast">
+    <div class="cel-emoji" id="cel-emoji"></div>
+    <div class="cel-title" id="cel-title"></div>
+    <div class="cel-msg"   id="cel-msg"></div>
   </div>
 
   <!-- Sidebar overlay (mobile) -->
@@ -2061,11 +2108,13 @@ async function loadProfile() {
     .eq('id', currentUser.id)
     .maybeSingle();
 
-  if (data && data.nombre) {
+  // T12: modal solo si perfil_completo no es true Y nombre ausente
+  const isComplete = data && (data.perfil_completo === true || !!data.nombre);
+  if (isComplete) {
     playerProfile = data;
     document.getElementById('welcome-modal').classList.remove('open');
     updateWelcomeMessage();
-    document.getElementById('user-display').textContent = data.nombre;
+    document.getElementById('user-display').textContent = data.nombre || currentUser.email.split('@')[0];
   } else {
     document.getElementById('welcome-modal').classList.add('open');
     if (data) {
@@ -2092,7 +2141,7 @@ async function saveProfile() {
   btn.disabled = true;
   btn.textContent = 'Guardando...';
 
-  const payload = { id: currentUser.id, nombre, posicion, formato };
+  const payload = { id: currentUser.id, nombre, posicion, formato, perfil_completo: true };
   if (playerProfile?.equipo_id) payload.equipo_id = playerProfile.equipo_id;
 
   const { data, error } = await sb.from('jugadores')
@@ -2231,6 +2280,7 @@ async function sendMessage() {
         contenido: text,
         respuesta: reply
       }).select();
+      checkMilestones();
     }
   } catch (err) {
     removeTyping(typingId);
@@ -2293,6 +2343,141 @@ function autoResize(el) {
   el.style.height = Math.min(el.scrollHeight, 120) + 'px';
 }
 
+// ===== CELEBRACIÓN DE HITOS =====
+let _celebrationTimer = null;
+function showCelebration(emoji, title, msg) {
+  const toast = document.getElementById('celebration-toast');
+  if (!toast) return;
+  document.getElementById('cel-emoji').textContent = emoji;
+  document.getElementById('cel-title').textContent = title;
+  document.getElementById('cel-msg').textContent   = msg;
+  if (_celebrationTimer) clearTimeout(_celebrationTimer);
+  toast.classList.remove('show');
+  void toast.offsetWidth; // reflow para reiniciar animación
+  toast.classList.add('show');
+  _celebrationTimer = setTimeout(() => toast.classList.remove('show'), 4500);
+}
+
+function calcStreak(sesiones) {
+  if (!sesiones?.length) return 0;
+  const days = [...new Set(
+    sesiones.map(s => new Date(s.created_at).toISOString().split('T')[0])
+  )].sort().reverse();
+  let streak = 1;
+  for (let i = 1; i < days.length; i++) {
+    const diff = (new Date(days[i-1]) - new Date(days[i])) / 86400000;
+    if (diff === 1) streak++;
+    else break;
+  }
+  return streak;
+}
+
+async function checkMilestones() {
+  if (!currentUser) return;
+  const [{ data: errores }, { data: sesiones }, { data: videos }, { data: planes }] = await Promise.all([
+    sb.from('errores').select('id').eq('jugador_id', currentUser.id),
+    sb.from('sesiones').select('id, created_at').eq('jugador_id', currentUser.id),
+    sb.from('analisis_video').select('id').eq('jugador_id', currentUser.id),
+    sb.from('planes').select('id').eq('jugador_id', currentUser.id)
+  ]);
+
+  const ne = errores?.length || 0;
+  const ns = sesiones?.length || 0;
+  const nv = videos?.length || 0;
+  const np = planes?.length || 0;
+
+  if (ns === 1) {
+    showCelebration('🏆', '¡Primera sesión!', 'Has dado el primer paso. El camino al siguiente nivel empieza aquí.');
+  } else if (ne === 10) {
+    showCelebration('🎯', '¡10 errores registrados!', 'Conocer tus patrones es el primer paso para eliminarlos.');
+  } else if (nv === 1) {
+    showCelebration('🎬', '¡Primer análisis de video!', 'Ahora el coach puede verte jugar y darte feedback real.');
+  } else if (np === 1) {
+    showCelebration('📋', '¡Primer plan generado!', 'Tu primera semana de entrenamiento personalizado está lista.');
+  } else if (ns >= 7) {
+    const streak = calcStreak(sesiones || []);
+    if (streak === 7) {
+      showCelebration('🔥', '¡7 días de racha!', 'Una semana completa de trabajo. La consistencia es lo que te diferencia.');
+    }
+  }
+}
+
+// ===== COMPARATIVA MENSUAL =====
+function renderComparativa(errores, sesiones) {
+  const section = document.getElementById('comparativa-section');
+  const container = document.getElementById('comparativa-content');
+  if (!section || !container) return;
+
+  const now   = new Date();
+  const t0    = new Date(now.getFullYear(), now.getMonth(), 1);       // inicio mes actual
+  const p0    = new Date(now.getFullYear(), now.getMonth() - 1, 1);   // inicio mes anterior
+  const p1    = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59); // fin mes anterior
+
+  const inThis = d => d >= t0;
+  const inPrev = d => d >= p0 && d <= p1;
+
+  const thisErr = errores.filter(e => inThis(new Date(e.created_at)));
+  const prevErr = errores.filter(e => inPrev(new Date(e.created_at)));
+  const thisSes = sesiones.filter(s => inThis(new Date(s.created_at)));
+  const prevSes = sesiones.filter(s => inPrev(new Date(s.created_at)));
+
+  // No mostrar si no hay datos de ambos meses
+  if (!thisErr.length && !prevErr.length && !thisSes.length && !prevSes.length) {
+    section.style.display = 'none'; return;
+  }
+  section.style.display = '';
+
+  const tipos = ['timing', 'posicion', 'decision', 'tecnica'];
+  const tipoLabel = { timing: 'Timing', posicion: 'Posición', decision: 'Decisión', tecnica: 'Técnica' };
+
+  function delta(curr, prev, moreIsBetter) {
+    if (prev === 0 && curr === 0) return { text: '= sin cambio', cls: 'same' };
+    if (prev === 0) return { text: `+${curr} nuevo`, cls: moreIsBetter ? 'better' : 'worse' };
+    const pct = Math.round(((curr - prev) / prev) * 100);
+    const sign = pct > 0 ? '+' : '';
+    const better = moreIsBetter ? pct > 0 : pct < 0;
+    return {
+      text: pct === 0 ? '= sin cambio' : `${sign}${pct}%`,
+      cls: pct === 0 ? 'same' : (better ? 'better' : 'worse')
+    };
+  }
+
+  // Tarjeta de sesiones
+  const sesDelta = delta(thisSes.length, prevSes.length, true);
+  let cards = `
+    <div class="comp-card">
+      <div class="comp-label">Sesiones</div>
+      <div class="comp-nums">
+        <span class="comp-current">${thisSes.length}</span>
+        <span class="comp-prev">vs ${prevSes.length}</span>
+      </div>
+      <div class="comp-delta ${sesDelta.cls}">${sesDelta.text}</div>
+    </div>`;
+
+  // Tarjetas por tipo de error (más errores = peor)
+  tipos.forEach(t => {
+    const curr = thisErr.filter(e => e.tipo === t).length;
+    const prev = prevErr.filter(e => e.tipo === t).length;
+    if (curr === 0 && prev === 0) return;
+    const d = delta(curr, prev, false);
+    cards += `
+    <div class="comp-card">
+      <div class="comp-label">${tipoLabel[t]}</div>
+      <div class="comp-nums">
+        <span class="comp-current">${curr}</span>
+        <span class="comp-prev">vs ${prev}</span>
+      </div>
+      <div class="comp-delta ${d.cls}">${d.text}</div>
+    </div>`;
+  });
+
+  const mesActual  = now.toLocaleString('es-CL', { month: 'long' });
+  const mesAnterior = p0.toLocaleString('es-CL', { month: 'long' });
+  container.innerHTML = `
+    <div class="comp-header">${mesActual} vs ${mesAnterior}</div>
+    <div class="comp-grid">${cards}</div>`;
+}
+
 // ===== ERRORES =====
 async function saveError() {
   if (!currentUser) return;
@@ -2313,6 +2498,7 @@ async function saveError() {
     document.getElementById('err-contexto').value = '';
     loadErrors();
     loadStats();
+    checkMilestones();
   }
 }
 
@@ -2344,7 +2530,7 @@ async function loadErrors() {
 
 async function loadStats() {
   if (!currentUser) return;
-  const { data: errores } = await sb.from('errores').select('tipo').eq('jugador_id', currentUser.id);
+  const { data: errores } = await sb.from('errores').select('tipo, created_at').eq('jugador_id', currentUser.id);
   const { data: sesiones } = await sb.from('sesiones').select('id, created_at').eq('jugador_id', currentUser.id);
 
   document.getElementById('stat-errores').textContent = errores?.length || 0;
@@ -2359,6 +2545,7 @@ async function loadStats() {
 
   renderChartErrores(errores || []);
   renderChartSesiones(sesiones || []);
+  renderComparativa(errores || [], sesiones || []);
 }
 
 function renderChartErrores(errores) {
@@ -2742,6 +2929,7 @@ Reglas: intensidad es "bajo", "medio" o "alto". 2-3 ejercicios por dia. Domingo 
       contenido: plan
     });
     if (saveErr) console.error('[generatePlan] save error:', saveErr);
+    checkMilestones();
 
     const fecha = new Date().toLocaleDateString('es-CL', { dateStyle: 'medium' });
     document.getElementById('plan-meta').textContent = `Generado el ${fecha}`;
@@ -2967,6 +3155,7 @@ async function analyzeVideo() {
         numero_camiseta: camiseta,
         analisis: data.analisis
       });
+      checkMilestones();
     }
 
     // ── Mostrar resultado ───────────────────────────────────────────────────
