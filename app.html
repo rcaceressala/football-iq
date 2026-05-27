@@ -188,7 +188,8 @@
     border-bottom: 1px solid var(--border);
     padding: 0 16px;
     height: var(--topbar-h);
-    display: flex;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: 16px;
   }
@@ -206,10 +207,12 @@
   .nav-tabs {
     display: flex;
     gap: 2px;
-    flex: 1;
+    align-items: center;
     overflow-x: auto;
     scrollbar-width: none;
+    min-width: 0;
   }
+  .nav-tabs::-webkit-scrollbar { display: none; }
 
   .nav-tab {
     padding: 6px 10px;
