@@ -24,7 +24,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
+        max_tokens: system && system.toLowerCase().includes('plan') ? 3000 : 1024,
         system: system || 'Eres un coach de futbol experto. Responde de forma concisa y practica.',
         messages
       })
