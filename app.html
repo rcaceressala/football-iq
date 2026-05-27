@@ -32,7 +32,7 @@
     --red-dim: #ff475715;
     --blue: #4a9eff;
     --blue-dim: #4a9eff15;
-    --topbar-h: 56px;
+    --topbar-h: 88px;
     --bnav-h: 64px;
   }
 
@@ -187,11 +187,16 @@
     background: var(--bg2);
     border-bottom: 1px solid var(--border);
     padding: 0 16px;
-    height: var(--topbar-h);
-    display: grid;
-    grid-template-columns: auto 1fr auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topbar-row1 {
+    display: flex;
     align-items: center;
-    gap: 16px;
+    justify-content: space-between;
+    height: 52px;
+    flex-shrink: 0;
   }
 
   .app-logo {
@@ -208,6 +213,7 @@
     display: flex;
     gap: 2px;
     align-items: center;
+    height: 36px;
     overflow-x: auto;
     scrollbar-width: none;
     min-width: 0;
@@ -1095,6 +1101,7 @@
 
   /* ===== RESPONSIVE MOBILE ===== */
   @media (max-width: 768px) {
+    :root { --topbar-h: 52px; }
     .nav-tabs { display: none; }
     .user-name { display: none; }
     .sidebar-toggle { display: flex; }
@@ -1175,20 +1182,22 @@
 <div id="app-screen">
 
   <div class="topbar">
-    <div class="app-logo">FOOTBALL <span>IQ</span></div>
+    <div class="topbar-row1">
+      <div class="app-logo">FOOTBALL <span>IQ</span></div>
+      <div class="user-pill">
+        <span class="user-name" id="user-display">—</span>
+        <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" title="Prompts rapidos">
+          <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h10M4 18h16"/></svg>
+        </button>
+        <button class="logout-btn" onclick="doLogout()">Salir</button>
+      </div>
+    </div>
     <div class="nav-tabs">
       <button class="nav-tab active" data-tab="coach" onclick="switchTab('coach', this)">Coach IA</button>
       <button class="nav-tab" data-tab="errores" onclick="switchTab('errores', this)">Mis Errores</button>
       <button class="nav-tab" data-tab="progreso" onclick="switchTab('progreso', this)">Progreso</button>
       <button class="nav-tab" data-tab="equipo" onclick="switchTab('equipo', this)">Equipo</button>
       <button class="nav-tab" data-tab="plan" onclick="switchTab('plan', this)">Mi Plan</button>
-    </div>
-    <div class="user-pill">
-      <span class="user-name" id="user-display">—</span>
-      <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()" title="Prompts rapidos">
-        <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h10M4 18h16"/></svg>
-      </button>
-      <button class="logout-btn" onclick="doLogout()">Salir</button>
     </div>
   </div>
 
