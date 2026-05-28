@@ -1109,7 +1109,7 @@
   }
   .plan-empty-sub { font-size: 13px; color: var(--t3); line-height: 1.6; margin-bottom: 20px; }
 
-  @media (max-width: 768px) {
+  @media (max-width: 767px) {
     .week-grid { grid-template-columns: 1fr; }
   }
 
@@ -1404,13 +1404,55 @@
   .video-hist-title { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 15px; color: var(--t); margin-bottom: 3px; }
   .video-hist-meta { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--t3); }
 
-  /* ===== RESPONSIVE MOBILE ===== */
-  @media (max-width: 768px) {
+  /* ===== RESPONSIVE: IPAD (768px–1024px) ===== */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    :root { --topbar-h: 88px; }
+
+    .nav-tabs { display: flex; }
+    .sidebar-toggle { display: none; }
+    .bottom-nav { display: none; }
+
+    .coach-layout {
+      grid-template-columns: 1fr 280px;
+      height: calc(100dvh - var(--topbar-h));
+    }
+
+    .coach-sidebar {
+      position: static;
+      transform: none !important;
+      width: 280px;
+      border-left: 1px solid var(--border2);
+      overflow-y: auto;
+    }
+
+    .sidebar-overlay { display: none !important; }
+
+    .week-grid { grid-template-columns: repeat(2, 1fr); }
+
+    .teammates-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .chart-wrap { height: 240px; }
+
+    .stats-grid { grid-template-columns: repeat(3, 1fr); }
+
+    .team-actions { grid-template-columns: repeat(2, 1fr); }
+
+    .content-page { padding: 28px 24px; overflow-x: hidden; }
+
+    .modal-overlay { padding: 20px; align-items: center; }
+    .modal-card { max-height: 85vh; overflow-y: auto; }
+  }
+
+  /* ===== RESPONSIVE: MOBILE (≤767px) ===== */
+  @media (max-width: 767px) {
     :root { --topbar-h: 52px; }
     .nav-tabs { display: none; }
     .user-name { display: none; }
     .sidebar-toggle { display: flex; }
-
     .bottom-nav { display: flex; }
 
     .coach-layout {
@@ -1438,22 +1480,79 @@
     .coach-sidebar.open { transform: translateX(0); }
 
     .chat-input { font-size: 16px; }
-
     .chat-messages { padding: 14px; gap: 12px; }
-
     .msg-bubble { max-width: 86%; font-size: 15px; }
-
     .chat-input-area { padding: 10px 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
-
-    .content-page { padding: 20px 14px calc(var(--bnav-h) + 16px); }
-
+    .content-page { padding: 20px 14px calc(var(--bnav-h) + 16px); overflow-x: hidden; }
     .page-title { font-size: 22px; }
-
     .login-body { padding: 22px 24px 28px; }
-
     .topbar { padding: 0 14px; gap: 10px; }
-
     .team-actions { grid-template-columns: 1fr 1fr; }
+
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal-card { max-height: 90vh; border-radius: 16px 16px 0 0; overflow-y: auto; }
+  }
+
+  /* ===== RESPONSIVE: PHONE (≤480px) ===== */
+  @media (max-width: 480px) {
+    /* Typography */
+    .page-title { font-size: 18px; }
+    .page-subtitle { font-size: 13px; }
+    .msg-bubble { font-size: 15px; }
+    .landing-logo { font-size: 44px; }
+
+    /* Touch targets ≥44px */
+    .save-btn,
+    .generate-btn,
+    .analyze-btn,
+    .landing-cta-main { min-height: 48px; }
+    .prompt-btn { min-height: 48px; padding: 12px 14px; }
+    .logout-btn { min-height: 44px; }
+    .nav-tab { min-height: 44px; }
+
+    /* Chat input */
+    .chat-input { min-height: 48px; font-size: 16px; }
+    .send-btn { width: 48px; height: 48px; }
+    .chat-input-area { gap: 8px; }
+
+    /* Forms */
+    .form-input,
+    .form-select,
+    .form-textarea { min-height: 48px; font-size: 16px; }
+    .team-form-row { flex-direction: column; }
+    .team-form-row .form-input { width: 100%; }
+    .team-actions { grid-template-columns: 1fr; }
+
+    /* Error cards */
+    .error-card { padding: 10px 12px; gap: 8px; }
+    .error-desc { font-size: 13px; }
+    .error-form { padding: 14px; }
+
+    /* Plan cards */
+    .day-card-header { padding: 10px 12px; }
+    .day-exercises { padding: 8px 12px; }
+    .plan-toolbar { flex-direction: column; align-items: stretch; }
+    .generate-btn { width: 100%; justify-content: center; }
+
+    /* Stats */
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .stat-val { font-size: 28px; }
+    .chart-wrap { height: 160px; }
+
+    /* Video upload — botón grande para dedos */
+    .video-upload-zone { padding: 44px 20px; }
+    .video-upload-icon { font-size: 48px; }
+    .video-upload-title { font-size: 20px; }
+    .video-analyze-row { flex-direction: column; }
+    .video-analyze-row .form-input { width: 100%; }
+    .analyze-btn { width: 100%; justify-content: center; }
+
+    /* Modal bottom sheet */
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal-card { border-radius: 20px 20px 0 0; max-height: 92vh; }
+
+    /* Landing */
+    .landing-features { grid-template-columns: 1fr; gap: 8px; }
   }
 
   /* ===== CELEBRATION TOAST ===== */
