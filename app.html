@@ -1236,13 +1236,13 @@
     display: none;
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    height: var(--bnav-h);
+    min-height: var(--bnav-h);
     background: var(--bg2);
     border-top: 1px solid var(--border2);
     z-index: 200;
     padding-bottom: env(safe-area-inset-bottom);
     justify-content: space-around;
-    align-items: center;
+    align-items: stretch;
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -1250,30 +1250,40 @@
   .bottom-nav::-webkit-scrollbar { display: none; }
 
   .bnav-btn {
-    flex: 1 0 56px;
+    flex: 1 0 52px;
+    min-width: 52px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 3px;
     background: transparent;
     border: none;
     color: var(--t3);
     cursor: pointer;
-    padding: 6px 4px;
+    padding: 8px 6px;
     transition: color .2s;
-    font-size: 9px;
-    font-family: 'DM Mono', monospace;
-    letter-spacing: .5px;
-    min-height: 52px;
+    min-height: 60px;
   }
 
   .bnav-btn svg {
-    width: 22px; height: 22px;
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    display: block;
     stroke: currentColor;
     fill: none;
     stroke-width: 1.8;
-    transition: stroke .2s;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .bnav-label {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: .3px;
+    line-height: 1;
+    white-space: nowrap;
   }
 
   .bnav-btn.active { color: var(--green); }
@@ -1972,28 +1982,28 @@
   <!-- Bottom navigation (mobile) -->
   <nav class="bottom-nav">
     <button class="bnav-btn active" data-tab="coach" onclick="switchTab('coach', this)">
-      <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-      Coach
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+      <span class="bnav-label">Coach</span>
     </button>
     <button class="bnav-btn" data-tab="errores" onclick="switchTab('errores', this)">
-      <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      Errores
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <span class="bnav-label">Errores</span>
     </button>
     <button class="bnav-btn" data-tab="progreso" onclick="switchTab('progreso', this)">
-      <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-      Progreso
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+      <span class="bnav-label">Progreso</span>
     </button>
     <button class="bnav-btn" data-tab="equipo" onclick="switchTab('equipo', this)">
-      <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-      Equipo
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      <span class="bnav-label">Equipo</span>
     </button>
     <button class="bnav-btn" data-tab="plan" onclick="switchTab('plan', this)">
-      <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-      Plan
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+      <span class="bnav-label">Plan</span>
     </button>
     <button class="bnav-btn" data-tab="video" onclick="switchTab('video', this)">
-      <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
-      Video
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.723v6.554a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+      <span class="bnav-label">Video</span>
     </button>
   </nav>
 
