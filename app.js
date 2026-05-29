@@ -1,5 +1,6 @@
 import { registrarJugador, loginJugador, logoutJugador, getJugadorActual } from './auth.js'
 import { consultarCoach, registrarError, getErrores } from './coach.js'
+import { supabase } from './supabaseClient.js'
 
 // Configura tu API key en el backend, nunca en el frontend
 const OPENAI_KEY = ''
@@ -11,6 +12,13 @@ let modoActual = 'analisis'
 window.addEventListener('load', async () => {
   jugadorActual = await getJugadorActual()
   if (jugadorActual) mostrarCoach()
+})
+
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT' || (!session && jugadorActual)) {
+    jugadorActual = null
+    location.reload()
+  }
 })
 
 // Auth tabs
@@ -41,6 +49,7 @@ document.getElementById('form-registro').addEventListener('submit', async (e) =>
   try {
     await registrarJugador({
       email: document.getElementById('reg-email').value,
+      password: document.getElementById('reg-pass').value,
       nombre: document.getElementById('reg-nombre').value,
       posicion: document.getElementById('reg-posicion').value,
       formato: document.getElementById('reg-formato').value,

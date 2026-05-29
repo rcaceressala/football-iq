@@ -2038,6 +2038,13 @@ let authMode = 'login';
   // else: landing screen visible by default
 })();
 
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_OUT' || (!session && currentUser)) {
+    currentUser = null;
+    showLanding();
+  }
+});
+
 // ===== NAVEGACION ENTRE PANTALLAS =====
 function showLanding() {
   document.getElementById('landing-screen').style.display = 'flex';
@@ -2095,7 +2102,14 @@ async function doLogin() {
     btn.textContent = 'Entrar al campo';
     return;
   }
-  enterApp(data.user);
+  if (!data.session) {
+    errEl.textContent = 'Revisa tu email y confirma tu cuenta antes de entrar.';
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Entrar al campo';
+    return;
+  }
+  enterApp(data.session.user);
 }
 
 async function doSignUp() {
@@ -2139,7 +2153,7 @@ async function doSignUp() {
   }
 
   if (data.session) {
-    enterApp(data.user);
+    enterApp(data.session.user);
   } else {
     sucEl.textContent = '✓ Cuenta creada. Revisa tu email para confirmar tu cuenta y luego inicia sesion.';
     sucEl.style.display = 'block';

@@ -1,14 +1,19 @@
 import { supabase } from './supabaseClient.js'
 
 // Registro de jugador
-export async function registrarJugador({ email, nombre, posicion, formato, nivel }) {
+export async function registrarJugador({ email, password, nombre, posicion, formato, nivel }) {
   // 1. Crear usuario en Supabase Auth
-  const { data: authData, error: authError } = await supabase.auth.signUp({ email, password: email })
+  const { data: authData, error: authError } = await supabase.auth.signUp({ email, password })
   if (authError) throw authError
 
-  // 2. Insertar perfil en tabla jugadores
+  if (!authData.session) {
+    // Email confirmation required — profile will be created after confirmation
+    return null
+  }
+
+  // 2. Insertar perfil en tabla jugadores (solo si hay sesión activa)
   const { data, error } = await supabase.from('jugadores').insert([{
-    id: authData.user.id,
+    id: authData.session.user.id,
     email,
     nombre,
     posicion,
