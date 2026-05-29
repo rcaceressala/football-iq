@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -2602,13 +2602,15 @@ async function saveError() {
     contexto: contexto || null
   });
 
-  if (!error) {
-    document.getElementById('err-desc').value = '';
-    document.getElementById('err-contexto').value = '';
-    loadErrors();
-    loadStats();
-    checkMilestones();
+  if (error) {
+    console.error('[saveError]', error.code, error.message, error.details, error.hint);
+    return;
   }
+  document.getElementById('err-desc').value = '';
+  document.getElementById('err-contexto').value = '';
+  loadErrors();
+  loadStats();
+  checkMilestones();
 }
 
 async function loadErrors() {
