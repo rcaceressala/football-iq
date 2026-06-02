@@ -1,6 +1,9 @@
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
+  const token = req.headers['authorization']?.replace('Bearer ', '')
+  if (!token) return res.status(401).json({ error: 'Falta token de sesion' })
+
   const { variant_id, user_id } = req.body ?? {}
   if (!variant_id || !user_id) return res.status(400).json({ error: 'variant_id y user_id requeridos' })
 
