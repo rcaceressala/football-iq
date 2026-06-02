@@ -1,6 +1,6 @@
 async function getUserFromToken(accessToken) {
   const res = await fetch(`${process.env.SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${accessToken}` },
+    headers: { apikey: process.env.SUPABASE_ANON_KEY, Authorization: `Bearer ${accessToken}` },
   });
   if (!res.ok) return null;
   const user = await res.json();
