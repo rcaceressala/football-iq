@@ -1113,6 +1113,78 @@
     .week-grid { grid-template-columns: 1fr; }
   }
 
+  /* ===== PRICING ===== */
+  .pricing-wrap {
+    margin-top: 32px;
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+  }
+  .pricing-header { text-align: center; margin-bottom: 20px; }
+  .pricing-heading {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--t);
+    margin-bottom: 4px;
+  }
+  .pricing-sub { font-size: 13px; color: var(--t3); }
+  .pricing-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .pricing-card {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    padding: 22px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    transition: border-color .2s;
+  }
+  .pricing-card:hover { border-color: var(--green-mid); }
+  .pricing-card--featured {
+    border-color: var(--green-mid);
+    background: linear-gradient(160deg, #0d1a14 0%, var(--bg2) 100%);
+  }
+  .pc-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--t3);
+  }
+  .pricing-card--featured .pc-name { color: var(--green); }
+  .pc-price { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 32px; color: var(--t); line-height: 1; }
+  .pc-period { font-size: 14px; font-weight: 400; color: var(--t3); }
+  .pc-features { list-style: none; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .pc-features li { font-size: 13px; color: var(--t2); padding-left: 18px; position: relative; line-height: 1.4; }
+  .pc-features li::before { content: '✓'; position: absolute; left: 0; color: var(--green); font-size: 11px; top: 1px; }
+  .pc-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--t);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color .2s, opacity .2s;
+    min-height: 44px;
+  }
+  .pc-btn:hover { border-color: var(--t2); }
+  .pc-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .pc-btn--featured { background: var(--green); border-color: var(--green); color: #080a0f; }
+  .pc-btn--featured:hover { opacity: .9; }
+  @media (max-width: 480px) {
+    .pricing-cards { grid-template-columns: 1fr; }
+    .pc-price { font-size: 28px; }
+  }
+
   /* ===== MODALS ===== */
   .modal-overlay {
     display: none;
@@ -1858,6 +1930,40 @@
           <div class="plan-empty-icon">📋</div>
           <div class="plan-empty-title">Sin plan esta semana</div>
           <div class="plan-empty-sub">Genera tu plan personalizado basado en tus errores frecuentes y perfil de jugador.</div>
+        </div>
+      </div>
+
+      <div class="pricing-wrap">
+        <div class="pricing-header">
+          <div class="pricing-heading">Mejora tu plan</div>
+          <div class="pricing-sub">Accede a todas las funciones del coach IA</div>
+        </div>
+        <div class="pricing-cards">
+
+          <div class="pricing-card">
+            <div class="pc-name">Pro</div>
+            <div class="pc-price">$4.990<span class="pc-period">/mes</span></div>
+            <ul class="pc-features">
+              <li>Coach IA sin límites</li>
+              <li>Plan semanal personalizado</li>
+              <li>Análisis de video</li>
+              <li>Historial de sesiones</li>
+            </ul>
+            <button class="pc-btn" onclick="suscribirse('pro', this)">Suscribirse</button>
+          </div>
+
+          <div class="pricing-card pricing-card--featured">
+            <div class="pc-name">Equipo</div>
+            <div class="pc-price">$12.990<span class="pc-period">/mes</span></div>
+            <ul class="pc-features">
+              <li>Todo lo de Pro</li>
+              <li>Modo equipo completo</li>
+              <li>Estadísticas grupales</li>
+              <li>Gestión de jugadores</li>
+            </ul>
+            <button class="pc-btn pc-btn--featured" onclick="suscribirse('team', this)">Suscribirse</button>
+          </div>
+
         </div>
       </div>
     </div>
@@ -3001,6 +3107,24 @@ function renderTeamChart(miembros, erroresPorJugador) {
       }
     }
   });
+}
+
+// ===== SUSCRIPCION =====
+async function suscribirse(plan, btn) {
+  const t = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Redirigiendo...';
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { alert('Debes iniciar sesión primero'); btn.disabled=false; btn.textContent=t; return; }
+    const res = await fetch('/api/create-checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+      body: JSON.stringify({ plan })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) { alert(data.error || 'Error al crear checkout'); btn.disabled=false; btn.textContent=t; return; }
+    window.location.href = data.url;
+  } catch(e) { alert('Error de conexion'); btn.disabled=false; btn.textContent=t; }
 }
 
 // ===== PLAN DE ENTRENAMIENTO IA =====
