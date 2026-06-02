@@ -17,7 +17,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const rawBody = await getRawBody(req)
-  const secret = process.env.LEMON_WEBHOOK_SECRET
+  const secret = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET
   const sig = req.headers['x-signature']
   const hmac = crypto.createHmac('sha256', secret).update(rawBody).digest('hex')
   if (hmac !== sig) return res.status(401).json({ error: 'Invalid signature' })
